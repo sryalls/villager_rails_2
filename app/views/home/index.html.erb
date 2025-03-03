@@ -1,2 +1,13 @@
-<h1>Villager</h1>
-<p>build your world</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Villager</title>
+  <%= stylesheet_link_tag 'application', media: 'all' %>
+  <%= javascript_importmap_tags %>
+</head>
+<body>
+  <h1>Welcome to Villager</h1>
+  <p>This is the homepage of your new Rails application.</p>
+  <div data-controller="hex-button" id="hex-button-container"></div>
+</body>
+</html>
