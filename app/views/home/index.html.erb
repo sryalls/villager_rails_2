@@ -26,22 +26,11 @@
   <h1>Welcome to Villager</h1>
   <p>This is the homepage of your new Rails application.</p>
   <div class="hex-container">
-
-    <% 3.times do |col| %>
-      <div data-controller="hex-button" class="hex-button" data-row="1" data-col="<%= col %>" data-spacer="1"></div>
-    <% end %>
-    <% 4.times do |col| %>
-      <div data-controller="hex-button" class="hex-button" data-row="2" data-col="<%= col %>" data-spacer="1"></div>
-    <% end %>
-    <% 5.times do |col| %>
-      <div data-controller="hex-button" class="hex-button" data-row="3" data-col="<%= col %>" data-spacer="0"></div>
-    <% end %>
-    <% 4.times do |col| %>
-      <div data-controller="hex-button" class="hex-button" data-row="4" data-col="<%= col %>" data-spacer="1"></div>
-    <% end %>
-    <% 3.times do |col| %>
-      <div data-controller="hex-button" class="hex-button" data-row="5" data-col="<%= col %>" data-spacer="1"></div>
+    <% @tiles.each do |tile| %>
+      <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile) } %>
     <% end %>
   </div>
+
+  <%= link_to 'home', root_path('test'), method: :post %>
 </body>
 </html>
