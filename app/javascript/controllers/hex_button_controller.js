@@ -17,6 +17,8 @@ export default class extends Controller {
     const col = parseInt(this.element.dataset.col)
     const spacer = parseInt(this.element.dataset.spacer)
     const hasVillage = this.element.dataset.hasVillage === "true"
+    const villageLink = this.element.dataset.villageLink;
+    const tileId = this.element.dataset.tileId;
     
     // Calculate the position of the hexagon
     var xOffset = 0
@@ -85,6 +87,10 @@ export default class extends Controller {
           alert(error.message);
         });
       })
+    } else {
+      polygon.on("click", () => {
+        window.location.href = villageLink;
+      });
     }
     
     // Add text to the hexagon button
