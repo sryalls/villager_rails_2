@@ -7,3 +7,12 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+# Ensure Devise is loaded
+require 'devise'
+
+# Create a user
+User.find_or_create_by!(email: 'example@example.com') do |user|
+  user.username = 'exampleuser'
+  user.password = 'password123'
+  user.password_confirmation = 'password123'
+end
