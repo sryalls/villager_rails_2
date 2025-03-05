@@ -2,16 +2,10 @@
 <html>
 <head>
   <title>Villager</title>
-  <%= stylesheet_link_tag 'application', media: 'all' %>
-  <%= javascript_importmap_tags %>
   <style>
-    .hex-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 0; /* No gap needed as we will position hexagons manually */
-      position: relative;
+    body, html {
+      margin: 0;
+      padding: 0;
       width: 100%;
       height: 100%;
     }
@@ -25,16 +19,8 @@
 <body>
   <h1>Welcome to Villager</h1>
   <p>This is the homepage of your new Rails application.</p>
-  <div class="hex-container">
-    <% @tiles.each do |tile| %>
-      <% user_village = current_user.village %>
-      <% if user_village && user_village.tile_id == tile.id %>
-        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: village_path(user_village) } %>
-      <% else %>
-        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: nil } %>
-      <% end %>
-    <% end %>
-  </div>
+
+  <%= render partial: 'hex_container' %>
 
   <%= link_to 'home', root_path('test'), method: :post %>
 </body>
