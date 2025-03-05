@@ -1,0 +1,10 @@
+<div class="hex-container">
+    <% @tiles.each do |tile| %>
+      <% user_village = current_user.village %>
+      <% if user_village && user_village.tile_id == tile.id %>
+        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: village_path(user_village) } %>
+      <% else %>
+        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: nil } %>
+      <% end %>
+    <% end %>
+</div>
