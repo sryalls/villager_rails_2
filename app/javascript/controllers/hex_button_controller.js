@@ -1,13 +1,6 @@
 import { Controller } from "@hotwired/stimulus";
 import * as d3 from "d3";
 
-const HEX_SIZE = 100;
-const HEX_FILL_COLOR_VILLAGE = "#2ecc71";
-const HEX_FILL_COLOR_NO_VILLAGE = "#3498db";
-const HEX_STROKE_COLOR_VILLAGE = "#27ae60";
-const HEX_STROKE_COLOR_NO_VILLAGE = "#2980b9";
-const FONT_SIZE = "16px";
-
 export default class extends Controller {
   connect() {
     const row = parseInt(this.element.dataset.row);
@@ -38,12 +31,10 @@ export default class extends Controller {
 
   addHexagonShape(svg, width, height, hasVillage) {
     const center = { x: width / 2, y: height / 2 };
-    const points = d3.range(6).map(i => this.hexCorner(center, HEX_SIZE, i)).join(" ");
+    const points = d3.range(6).map(i => this.hexCorner(center, 100, i)).join(" ");
     return svg.append("polygon")
       .attr("points", points)
-      .attr("fill", hasVillage ? HEX_FILL_COLOR_VILLAGE : HEX_FILL_COLOR_NO_VILLAGE)  // Change color if village exists
-      .attr("stroke", hasVillage ? HEX_STROKE_COLOR_VILLAGE : HEX_STROKE_COLOR_NO_VILLAGE)
-      .attr("stroke-width", 2);
+      .attr("class", `hexagon ${hasVillage ? 'village' : 'no-village'}`);
   }
 
   createSvgContainer(width, height) {
@@ -57,8 +48,8 @@ export default class extends Controller {
 
   calculateHexagonDimensions(row, col, spacer) {
     // Calculate width and height of a hexagon
-    const width = Math.sqrt(3) * HEX_SIZE;
-    const height = 2 * HEX_SIZE;
+    const width = Math.sqrt(3) * 100;
+    const height = 2 * 100;
 
     // Calculate the position of the hexagon
     const { xOffset, yOffset } = this.calculateOffsets(row, col, width, height, spacer);
@@ -93,10 +84,7 @@ export default class extends Controller {
     svg.append("text")
       .attr("x", center.x)
       .attr("y", center.y)
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .attr("fill", "white")
-      .attr("font-size", FONT_SIZE)
+      .attr("class", "hexagon-text")
       .text(hasVillage ? "Village" : "Create Village");
   }
 
