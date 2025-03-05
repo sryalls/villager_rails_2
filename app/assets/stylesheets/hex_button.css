@@ -11,3 +11,23 @@ body, html {
     position: absolute;
   }
   
+  .hexagon {
+    stroke-width: 2;
+  }
+  
+  .hexagon.village {
+    fill: #2ecc71;
+    stroke: #27ae60;
+  }
+  
+  .hexagon.no-village {
+    fill: #3498db;
+    stroke: #2980b9;
+  }
+  
+  .hexagon-text {
+    fill: white;
+    font-size: 16px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
