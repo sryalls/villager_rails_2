@@ -107,35 +107,22 @@ export default class extends Controller {
   }
 
   createVillage(tileId) {
-    fetch('/villages/check_village', {
-      method: 'GET',
+    fetch(`/villages?tile_id=${tileId}`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       }
-    }).then(response => response.json())
-      .then(data => {
-        if (data.hasVillage) {
-          alert('You already have a village.');
-        } else {
-          fetch(`/villages?tile_id=${tileId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-          }).then(response => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw new Error('Failed to create village');
-            }
-          }).then(data => {
-            window.location.href = data.redirect_url;
-          }).catch(error => {
-            alert(error.message);
-          });
-        }
-      });
+    }).then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Failed to create village');
+      }
+    }).then(data => {
+      window.location.href = data.redirect_url;
+    }).catch(error => {
+      alert(error.message);
+    });
   }
 }
