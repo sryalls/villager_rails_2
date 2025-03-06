@@ -2,9 +2,9 @@
     <% @tiles.each do |tile| %>
       <% user_village = current_user.village %>
       <% if user_village && user_village.tile_id == tile.id %>
-        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: village_path(user_village) } %>
+        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: village_path(user_village), user_has_village: !user_village.blank? } %>
       <% else %>
-        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: nil } %>
+        <%= render partial: 'hex_button', locals: { tile: tile, spacer: calculate_spacer(tile), link: nil, user_has_village: !user_village.blank? } %>
       <% end %>
     <% end %>
 </div>

@@ -6,9 +6,10 @@ export default class extends Controller {
     const row = parseInt(this.element.dataset.row);
     const col = parseInt(this.element.dataset.col);
     const spacer = parseFloat(this.element.dataset.spacer);
-    const hasVillage = this.element.dataset.hasVillage === "true";
+    const tileHasVillage = this.element.dataset.tileHasVillage === "true";
     const villageLink = this.element.dataset.villageLink;
     const tileId = this.element.dataset.tileId;
+    const userHasVillage = this.element.dataset.userHasVillage === "true";
 
     // Determine hexagon dimensions
     const { width, height, xOffset, yOffset } = this.calculateHexagonDimensions(row, col, spacer);
@@ -20,21 +21,21 @@ export default class extends Controller {
     const svg = this.createSvgContainer(width, height);
 
     // Add hexagon shape
-    const polygon = this.addHexagonShape(svg, width, height, hasVillage);
+    const polygon = this.addHexagonShape(svg, width, height, tileHasVillage);
 
     // Add text to the hexagon button
-    this.addHexagonText(svg, { x: width / 2, y: height / 2 }, hasVillage);
+    this.addHexagonText(svg, { x: width / 2, y: height / 2 }, tileHasVillage, userHasVillage);
 
     // Attach click event to the polygon
-    this.attachClickEvent(polygon, hasVillage, villageLink, tileId);
+    this.attachClickEvent(polygon, tileHasVillage, villageLink, tileId, userHasVillage);
   }
 
-  addHexagonShape(svg, width, height, hasVillage) {
+  addHexagonShape(svg, width, height, tileHasVillage) {
     const center = { x: width / 2, y: height / 2 };
     const points = d3.range(6).map(i => this.hexCorner(center, 100, i)).join(" ");
     return svg.append("polygon")
       .attr("points", points)
-      .attr("class", `hexagon ${hasVillage ? 'village' : 'no-village'}`);
+      .attr("class", `hexagon ${tileHasVillage ? 'village' : 'no-village'}`);
   }
 
   createSvgContainer(width, height) {
@@ -80,20 +81,21 @@ export default class extends Controller {
     ];
   }
 
-  addHexagonText(svg, center, hasVillage) {
+  addHexagonText(svg, center, tileHasVillage, userHasVillage) {
+    const text = tileHasVillage ? "Village" : (userHasVillage ? "" : "Create Village");
     svg.append("text")
       .attr("x", center.x)
       .attr("y", center.y)
       .attr("class", "hexagon-text")
-      .text(hasVillage ? "Village" : "Create Village");
+      .text(text);
   }
 
-  attachClickEvent(polygon, hasVillage, villageLink, tileId) {
-    if (hasVillage && villageLink) {
+  attachClickEvent(polygon, tileHasVillage, villageLink, tileId, userHasVillage) {
+    if (tileHasVillage && villageLink) {
       polygon.on("click", () => {
         this.navigateToVillage(villageLink);
       });
-    } else if (!hasVillage) {
+    } else if (!tileHasVillage && !userHasVillage) {
       polygon.on("click", () => {
         this.createVillage(tileId);
       });
@@ -105,22 +107,35 @@ export default class extends Controller {
   }
 
   createVillage(tileId) {
-    fetch(`/villages?tile_id=${tileId}`, {
-      method: 'POST',
+    fetch('/villages/check_village', {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       }
-    }).then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error('Failed to create village');
-      }
-    }).then(data => {
-      window.location.href = data.redirect_url;
-    }).catch(error => {
-      alert(error.message);
-    });
+    }).then(response => response.json())
+      .then(data => {
+        if (data.hasVillage) {
+          alert('You already have a village.');
+        } else {
+          fetch(`/villages?tile_id=${tileId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+          }).then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error('Failed to create village');
+            }
+          }).then(data => {
+            window.location.href = data.redirect_url;
+          }).catch(error => {
+            alert(error.message);
+          });
+        }
+      });
   }
 }
