@@ -90,6 +90,7 @@ RSpec.configure do |config|
   # Configure Capybara to use Selenium with Chrome
   Capybara.default_driver = :selenium_chrome_headless
   Capybara.javascript_driver = :selenium_chrome_headless
+
   # If you want to use the non-headless version of Chrome, use this instead:
   # Capybara.default_driver = :selenium_chrome
 
