@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.feature "HexButton", type: :feature, js: true do
-
   let(:user) { create(:user) }
   let(:tile) { create(:tile) }
 
@@ -21,7 +20,6 @@ RSpec.feature "HexButton", type: :feature, js: true do
     expect(page).to have_selector("[data-test-target='hex-button-create-#{tile.x}#{tile.y}']")
 
     find("[data-test-target='hex-button-create-#{tile.x}#{tile.y}']").click
-
   end
 
   scenario "User cannot create another village if they already have one" do

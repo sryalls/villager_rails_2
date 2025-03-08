@@ -42,7 +42,7 @@ gem "thruster", require: false
 
 gem "d3-rails"
 gem "devise"
-gem 'rails-ujs'
+gem "rails-ujs"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -54,9 +54,9 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop", "~> 1.73.1", require: false
   gem "rubocop-rails-omakase", require: false
-  gem 'rspec-rails'
-  gem 'factory_bot_rails'
-  gem 'byebug'
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "byebug"
 end
 
 group :development do
@@ -70,5 +70,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "webdrivers"
-  gem 'rspec-wait'
+  gem "rspec-wait"
 end
