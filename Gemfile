@@ -57,6 +57,7 @@ group :development, :test do
   gem "rspec-rails"
   gem "factory_bot_rails"
   gem "byebug"
+  gem "erb_lint"
 end
 
 group :development do
