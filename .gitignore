@@ -39,3 +39,12 @@
 /yarn-error.log
 yarn-debug.log*
 .yarn-integrity
+
+# Ignore Byebug history file
+.byebug_history
+
+# Ignore RSpec configuration file
+.rspec
+
+# Ignore local ChromeDriver binary
+bin/chromedriver-linux64/
