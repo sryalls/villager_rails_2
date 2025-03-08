@@ -1,0 +1,21 @@
+linters:
+  ErbSafety:
+    enabled: true
+  FinalNewline:
+    enabled: true
+  HtmlAttributeOrder:
+    enabled: true
+  HtmlAttributeQuotes:
+    enabled: true
+  HtmlAttributes:
+    enabled: true
+  HtmlDoctype:
+    enabled: true
+  HtmlEndOfFile:
+    enabled: true
+  HtmlIndent:
+    enabled: true
+  HtmlWhitespace:
+    enabled: true
+  SelfClosingTag:
+    enabled: true
