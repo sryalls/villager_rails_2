@@ -1,3 +1,8 @@
 <%= link_to 'Home', root_path %>
 <h1><%= current_user.username %>'s Village</h1>
 <p>Welcome to your village, <%= current_user.username %>!</p>
+<%= render 'build_form', village: @village, buildings: @buildings %>
+<div id="built-buildings">
+    <%= render 'built_buildings', buildings: @village.buildings %>
+</div>
+

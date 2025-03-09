@@ -1,0 +1,5 @@
+<%= turbo_stream.replace "built-buildings" do %>
+  <div id="built-buildings">
+    <%= render 'villages/built_buildings', buildings: @village.buildings %>
+  </div>
+<% end %>

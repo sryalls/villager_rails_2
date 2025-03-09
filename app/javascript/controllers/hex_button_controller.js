@@ -107,11 +107,14 @@ export default class extends Controller {
   }
 
   createVillage(tileId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     fetch(`/villages?tile_id=${tileId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-CSRF-Token': csrfToken
       }
     }).then(response => {
       if (response.ok) {

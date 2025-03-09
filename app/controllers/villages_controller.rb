@@ -25,7 +25,7 @@ class VillagesController < ApplicationController
   end
 
   def show
-    # @village is already set by set_village
+    @buildings = Building.all
   end
 
   private
