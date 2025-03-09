@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus";
 import * as d3 from "d3";
+import Rails from "@rails/ujs";
 
 export default class extends Controller {
   connect() {
@@ -107,22 +108,16 @@ export default class extends Controller {
   }
 
   createVillage(tileId) {
-    fetch(`/villages?tile_id=${tileId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    Rails.ajax({
+      url: `/villages?tile_id=${tileId}`,
+      type: 'POST',
+      dataType: 'json',
+      success: (data) => {
+        window.location.href = data.redirect_url;
+      },
+      error: (error) => {
+        alert('Failed to create village');
       }
-    }).then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error('Failed to create village');
-      }
-    }).then(data => {
-      window.location.href = data.redirect_url;
-    }).catch(error => {
-      alert(error.message);
     });
   }
 }

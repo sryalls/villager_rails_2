@@ -7,6 +7,7 @@ RSpec.feature "HexButton", type: :feature, js: true do
   before do
     sign_in user
     visit root_path
+    inject_csrf_token
   end
 
   scenario "User sees 'Create Village' on an empty tile" do
@@ -15,7 +16,6 @@ RSpec.feature "HexButton", type: :feature, js: true do
   scenario "User creates a village" do
     visit root_path
     expect(page).to have_selector("[data-test-target='hex-button-create-#{tile.x}#{tile.y}']")
-
     find("[data-test-target='hex-button-create-#{tile.x}#{tile.y}']").click
     page.find('h1', text: "#{user.username}'s Village")
     page.find('p', text: "Welcome to your village, #{user.username}!")

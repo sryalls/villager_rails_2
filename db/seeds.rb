@@ -16,3 +16,13 @@ User.find_or_create_by!(email: 'example@example.com') do |user|
   user.password = 'password123'
   user.password_confirmation = 'password123'
 end
+
+buildings = [
+  { name: 'Farm' },
+  { name: 'House' },
+  { name: 'Woodcutter' }
+]
+
+buildings.each do |building|
+  Building.find_or_create_by!(building)
+end
