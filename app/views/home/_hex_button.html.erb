@@ -1,2 +1,15 @@
-<div data-controller="hex-button" class="hex-button" data-row="<%= tile.x %>" data-col="<%= tile.y %>" data-spacer="<%= spacer %>" data-tile-id="<%= tile.id %>" data-tile-has-village="<%= tile.village.present? %>" data-village-link="<%= link %>" data-user-has-village="<%= user_has_village %>" data-test-target="hex-button-<%= user_has_village ? 'show' : 'create' %>-<%= tile.x %><%= tile.y %>">
+<div
+  data-controller="hex-button"
+  class="hex-button"
+  data-row="<%= tile.x %>"
+  data-col="<%= tile.y %>"
+  data-spacer="<%= spacer %>"
+  data-tile-id="<%= tile.id %>"
+  data-tile-has-village="<%= tile.village.present? %>"
+  data-village-link="<%= link %>"
+  data-user-has-village="<%= user_has_village %>"
+  data-village-owner="<%= tile.village&.user&.username %>"
+  data-is-current-user-village="<%= tile.village&.user == current_user %>"
+  data-test-target="hex-button-<%= user_has_village ? 'show' : 'create' %>-<%= tile.x %><%= tile.y %>"
+>
 </div>

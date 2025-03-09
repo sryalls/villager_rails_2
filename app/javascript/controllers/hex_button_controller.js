@@ -11,10 +11,11 @@ export default class extends Controller {
     const villageLink = this.element.dataset.villageLink;
     const tileId = this.element.dataset.tileId;
     const userHasVillage = this.element.dataset.userHasVillage === "true";
-
+    const villageOwner = this.element.dataset.villageOwner;
+    const isCurrentUserVillage = this.element.dataset.isCurrentUserVillage === "true";
     // Determine hexagon dimensions
     const { width, height, xOffset, yOffset } = this.calculateHexagonDimensions(row, col, spacer);
-
+    
     // Position the hexagon
     this.element.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
 
@@ -25,10 +26,10 @@ export default class extends Controller {
     const polygon = this.addHexagonShape(svg, width, height, tileHasVillage);
 
     // Add text to the hexagon button
-    this.addHexagonText(svg, { x: width / 2, y: height / 2 }, tileHasVillage, userHasVillage);
+    this.addHexagonText(svg, { x: width / 2, y: height / 2 }, tileHasVillage, userHasVillage, villageOwner, isCurrentUserVillage);
 
     // Attach click event to the polygon
-    this.attachClickEvent(polygon, tileHasVillage, villageLink, tileId, userHasVillage);
+    this.attachClickEvent(polygon, tileHasVillage, villageLink, tileId, userHasVillage, isCurrentUserVillage);
   }
 
   addHexagonShape(svg, width, height, tileHasVillage) {
@@ -82,8 +83,13 @@ export default class extends Controller {
     ];
   }
 
-  addHexagonText(svg, center, tileHasVillage, userHasVillage) {
-    const text = tileHasVillage ? "Village" : (userHasVillage ? "" : "Create Village");
+  addHexagonText(svg, center, tileHasVillage, userHasVillage, villageOwner, isCurrentUserVillage) {
+    let text = "";
+    if (tileHasVillage) {
+      text = isCurrentUserVillage ? "Your Village" : `${villageOwner}'s Village`;
+    } else if (!userHasVillage) {
+      text = "Create Village";
+    }
     svg.append("text")
       .attr("x", center.x)
       .attr("y", center.y)
@@ -91,8 +97,8 @@ export default class extends Controller {
       .text(text);
   }
 
-  attachClickEvent(polygon, tileHasVillage, villageLink, tileId, userHasVillage) {
-    if (tileHasVillage && villageLink) {
+  attachClickEvent(polygon, tileHasVillage, villageLink, tileId, userHasVillage, isCurrentUserVillage) {
+    if (tileHasVillage && isCurrentUserVillage && villageLink) {
       polygon.on("click", () => {
         this.navigateToVillage(villageLink);
       });
@@ -102,6 +108,7 @@ export default class extends Controller {
       });
     }
   }
+
 
   navigateToVillage(villageLink) {
     window.location.href = villageLink;
