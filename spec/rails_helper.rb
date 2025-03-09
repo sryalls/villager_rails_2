@@ -87,6 +87,8 @@ RSpec.configure do |config|
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
 
+  config.include CsrfHelper, type: :feature
+
   # Configure Capybara to use Selenium with Chrome
   Capybara.default_driver = :selenium_chrome_headless
   Capybara.javascript_driver = :selenium_chrome_headless
