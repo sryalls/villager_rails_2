@@ -115,7 +115,7 @@ export default class extends Controller {
       success: (data) => {
         window.location.href = data.redirect_url;
       },
-      error: (error) => {
+      error: () => {
         alert('Failed to create village');
       }
     });

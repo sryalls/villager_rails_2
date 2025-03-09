@@ -6,7 +6,7 @@ class VillageBuildingsController < ApplicationController
     @building = Building.find(params[:village_building][:building_id])
     @village.buildings << @building
     respond_to do |format|
-      format.html { redirect_to @village, notice: 'Building was successfully added.' }
+      format.html { redirect_to @village, notice: "Building was successfully added." }
       format.turbo_stream
     end
   end
