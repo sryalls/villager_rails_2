@@ -16,7 +16,7 @@ RSpec.feature "VillageShow", type: :feature, js: true do
   scenario "User sees 'Build' button and dropdown of available buildings" do
     expect(page).to have_button("Build")
     find('[data-test="build-button"]').click
-    expect(page).to have_select("village_building_building_id", with_options: ["Farm", "House", "Woodcutter"])
+    expect(page).to have_select("village_building_building_id", with_options: [ "Farm", "House", "Woodcutter" ])
   end
 
   scenario "User builds a building" do

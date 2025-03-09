@@ -10,12 +10,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_09_095718) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_09_122645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "buildings", force: :cascade do |t|
     t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "resources", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_resources_on_name", unique: true
+  end
+
+  create_table "resources_tags", id: false, force: :cascade do |t|
+    t.bigint "resource_id", null: false
+    t.bigint "tag_id", null: false
+    t.index ["resource_id"], name: "index_resources_tags_on_resource_id"
+    t.index ["tag_id"], name: "index_resources_tags_on_tag_id"
+  end
+
+  create_table "tags", force: :cascade do |t|
+    t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -49,6 +69,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_09_095718) do
     t.index ["village_id"], name: "index_village_buildings_on_village_id"
   end
 
+  create_table "village_resources", force: :cascade do |t|
+    t.bigint "village_id", null: false
+    t.bigint "resource_id", null: false
+    t.integer "count"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["resource_id"], name: "index_village_resources_on_resource_id"
+    t.index ["village_id"], name: "index_village_resources_on_village_id"
+  end
+
   create_table "villages", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "tile_id", null: false
@@ -60,6 +90,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_09_095718) do
 
   add_foreign_key "village_buildings", "buildings"
   add_foreign_key "village_buildings", "villages"
+  add_foreign_key "village_resources", "resources"
+  add_foreign_key "village_resources", "villages"
   add_foreign_key "villages", "tiles"
   add_foreign_key "villages", "users"
 end
