@@ -50,3 +50,10 @@ This is a new Rails application.
     ```
 
     Open your web browser and go to `http://localhost:3000`.
+
+7. for testing, ensure that the correct version of chromedriver is installed and in the correct place: 
+```
+wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+
+mv chromedriver-linux64/chromedriver bin/chromedriver-linux64/chromedriver
+```

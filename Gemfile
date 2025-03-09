@@ -58,6 +58,8 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "byebug"
   gem "erb_lint"
+  gem "pry"
+  gem "pry-rails"
 end
 
 group :development do
@@ -69,6 +71,7 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
+  gem "capybara-screenshot"
   gem "selenium-webdriver"
   gem "webdrivers"
   gem "rspec-wait"
