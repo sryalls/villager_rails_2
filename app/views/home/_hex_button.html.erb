@@ -10,6 +10,5 @@
   data-user-has-village="<%= user_has_village %>"
   data-village-owner="<%= tile.village&.user&.username %>"
   data-is-current-user-village="<%= tile.village&.user == current_user %>"
-  data-test-target="hex-button-<%= user_has_village ? 'show' : 'create' %>-<%= tile.x %><%= tile.y %>"
->
+  data-test-target="hex-button-<%= user_has_village ? 'show' : 'create' %>-<%= tile.x %><%= tile.y %>">
 </div>
