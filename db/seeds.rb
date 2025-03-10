@@ -47,9 +47,9 @@ VillageBuilding.find_or_create_by!(village: village, building: house)
 
 # Create resources and tags
 resources = [
-  { name: 'Potatoes', tags: ['food'] },
-  { name: 'Lumber', tags: ['fuel', 'building materials'] },
-  { name: 'Stone Blocks', tags: ['building materials'] }
+  { name: 'Potatoes', tags: [ 'food' ] },
+  { name: 'Lumber', tags: [ 'fuel', 'building materials' ] },
+  { name: 'Stone Blocks', tags: [ 'building materials' ] }
 ]
 
 resources.each do |resource_data|

@@ -75,4 +75,10 @@ Rails.application.configure do
   config.assets.compile = true
   config.assets.digest = false
   config.assets.quiet = true
+
+  config.web_console.permissions = [
+    "192.168.178.0/24" # Local network
+  ]
+
+  BetterErrors::Middleware.allow_ip! "192.168.178.0/24" # Local network
 end
