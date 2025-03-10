@@ -65,8 +65,8 @@ end
 group :development do
   gem "better_errors"
   # Use console on exceptions pages [https://github.com/rails/web-console]
-  gem "web-console", '>= 3.3.0'
-  gem 'binding_of_caller'
+  gem "web-console", ">= 3.3.0"
+  gem "binding_of_caller"
 end
 
 group :test do
