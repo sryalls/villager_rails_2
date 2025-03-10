@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_09_122645) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_10_141547) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,6 +18,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_09_122645) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "costs", force: :cascade do |t|
+    t.bigint "building_id", null: false
+    t.bigint "tag_id", null: false
+    t.integer "quantity", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["building_id"], name: "index_costs_on_building_id"
+    t.index ["tag_id"], name: "index_costs_on_tag_id"
   end
 
   create_table "resources", force: :cascade do |t|
@@ -88,6 +98,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_09_122645) do
     t.index ["user_id"], name: "index_villages_on_user_id"
   end
 
+  add_foreign_key "costs", "buildings"
+  add_foreign_key "costs", "tags"
   add_foreign_key "village_buildings", "buildings"
   add_foreign_key "village_buildings", "villages"
   add_foreign_key "village_resources", "resources"

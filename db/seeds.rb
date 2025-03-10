@@ -60,3 +60,5 @@ resources.each do |resource_data|
   end
   VillageResource.find_or_create_by!(village: village, resource: resource, count: 100)
 end
+
+house.costs.find_or_create_by!(tag: Tag.find_by(name: 'building materials'), quantity: 10)
