@@ -2,8 +2,19 @@
   <button data-build-target="buildButton" id="build-button" data-test="build-button">Build</button>
   <div data-build-target="buildDropdown" id="build-dropdown" style="display: none;">
     <%= form_with model: [@village, VillageBuilding.new], local: true do |form| %>
-      <%= form.collection_select :building_id, @buildings, :id, :name, prompt: "Select a building" %>
-      <%= form.submit "Build", data: { test: "form-submit-button" } %>
+    <% @buildings.each do |building| %>
+        <div>
+          <label>
+            <%= radio_button_tag 'village_building[building_id]', building.id %>
+            <strong><%= building.name %></strong>
+            <ul>
+              <% building.costs.each do |cost| %>
+                <li><%= cost.quantity %> <%= cost.tag.name %></li>
+              <% end %>
+            </ul>
+          </label>
+        </div>
+      <% end %>      <%= form.submit "Build", data: { test: "form-submit-button" } %>
     <% end %>
   </div>
 </div>
