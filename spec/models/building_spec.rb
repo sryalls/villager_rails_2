@@ -33,5 +33,20 @@ RSpec.describe Building, type: :model do
         expect(building.villages).to include(village1, village2)
       end
     end
+
+    context "with costs" do
+      let(:tag1) { create(:tag) }
+      let(:tag2) { create(:tag) }
+      let!(:cost1) { create(:cost, building: building, tag: tag1, quantity: 50) }
+      let!(:cost2) { create(:cost, building: building, tag: tag2, quantity: 10) }
+
+      it "has many costs" do
+        expect(building.costs).to include(cost1, cost2)
+      end
+
+      it "has many tags through costs" do
+        expect(building.tags).to include(tag1, tag2)
+      end
+    end
   end
 end
