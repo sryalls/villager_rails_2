@@ -13,19 +13,22 @@ RSpec.feature "VillageShow", type: :feature, js: true do
   let!(:resource1) { create(:resource, name: "Wood") }
   let!(:resource2) { create(:resource, name: "Stone") }
   let!(:village_resource1) { create(:village_resource, village: village, resource: resource1, count: 100) }
-  let!(:village_resource2) { create(:village_resource, village: village, resource: resource2, count: 200) }
+  let!(:village_resource2) { create(:village_resource, village: village, resource: resource2, count: 5) } # Not enough for House
+
   before do
+    resource1.tags << tag1
+    resource2.tags << tag2
     sign_in user
     visit village_path(village)
     inject_csrf_token
   end
 
-  scenario "User sees 'Build' button and dropdown of available buildings" do
+  scenario "User sees 'Build' button and radio list of available buildings" do
     expect(page).to have_button("Build")
     find('[data-test="build-button"]').click
-    expect(page).to have_selector("input[type=radio][name='village_building[building_id]'][value='#{building1.id}']")
-    expect(page).to have_selector("input[type=radio][name='village_building[building_id]'][value='#{building2.id}']")
-    expect(page).to have_selector("input[type=radio][name='village_building[building_id]'][value='#{building3.id}']")
+    expect(page).to have_selector("input[type=radio][name='village_building[building_id]'][value='#{building1.id}']:not([disabled])")
+    expect(page).to have_selector("input[type=radio][name='village_building[building_id]'][value='#{building2.id}'][disabled]")
+    expect(page).to have_selector("input[type=radio][name='village_building[building_id]'][value='#{building3.id}']:not([disabled])")
     expect(page).to have_content("Farm")
     expect(page).to have_content("House")
     expect(page).to have_content("Woodcutter")
@@ -56,7 +59,7 @@ RSpec.feature "VillageShow", type: :feature, js: true do
     visit village_path(village)
     within('[data-test="resources-list"]') do
       expect(page).to have_content("Wood: 100")
-      expect(page).to have_content("Stone: 200")
+      expect(page).to have_content("Stone: 5")
     end
   end
 end

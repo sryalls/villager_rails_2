@@ -34,7 +34,8 @@ village = Village.find_or_create_by!(user: user_with_village, tile: tile)
 buildings = [
   { name: 'Farm' },
   { name: 'House' },
-  { name: 'Woodcutter' }
+  { name: 'Woodcutter' },
+  { name: 'Barracks' }
 ]
 
 buildings.each do |building|
@@ -49,7 +50,8 @@ VillageBuilding.find_or_create_by!(village: village, building: house)
 resources = [
   { name: 'Potatoes', tags: [ 'food' ] },
   { name: 'Lumber', tags: [ 'fuel', 'building materials' ] },
-  { name: 'Stone Blocks', tags: [ 'building materials' ] }
+  { name: 'Stone Blocks', tags: [ 'building materials' ] },
+  { name: 'Iron', tags: [ 'fortifying materials' ] }
 ]
 
 resources.each do |resource_data|
@@ -58,7 +60,20 @@ resources.each do |resource_data|
     tag = Tag.find_or_create_by!(name: tag_name)
     resource.tags << tag unless resource.tags.include?(tag)
   end
-  VillageResource.find_or_create_by!(village: village, resource: resource, count: 100)
 end
 
+# Create costs for buildings
+house = Building.find_by(name: 'House')
+barracks = Building.find_by(name: 'Barracks')
+woodcutter = Building.find_by(name: 'Woodcutter')
+
 house.costs.find_or_create_by!(tag: Tag.find_by(name: 'building materials'), quantity: 10)
+barracks.costs.find_or_create_by!(tag: Tag.find_by(name: 'building materials'), quantity: 50)
+barracks.costs.find_or_create_by!(tag: Tag.find_by(name: 'fortifying materials'), quantity: 30)
+woodcutter.costs.find_or_create_by!(tag: Tag.find_by(name: 'fuel'), quantity: 20)
+
+
+# Adjust village resources to test affordability
+VillageResource.find_or_create_by!(village: village, resource: Resource.find_by(name: 'Lumber'), count: 60)
+VillageResource.find_or_create_by!(village: village, resource: Resource.find_by(name: 'Stone Blocks'), count: 20)
+VillageResource.find_or_create_by!(village: village, resource: Resource.find_by(name: 'Iron'), count: 10)
