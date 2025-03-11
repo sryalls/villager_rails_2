@@ -1,4 +1,5 @@
-// Import and register all your controllers from the importmap via controllers/**/*_controller
-import { application } from "controllers/application"
-import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
-eagerLoadControllersFrom("controllers", application)
+// filepath: /home/sandy/repos/villager_rails_2/app/javascript/controllers/index.js
+import BuildController from "./build_controller"
+import HexButtonController from "./hex_button_controller"
+
+export { BuildController, HexButtonController }

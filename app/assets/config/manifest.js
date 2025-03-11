@@ -1,4 +1,8 @@
 //= link_tree ../images
-//= link_directory ../stylesheets .css
-//= link_directory ../javascripts .js
-//= link hex_button.css
+//= link application.css
+//= link application.js
+//= link controllers/application.js
+//= link controllers/build_controller.js
+//= link controllers/hello_controller.js
+//= link controllers/hex_button_controller.js
+//= link controllers/index.js
