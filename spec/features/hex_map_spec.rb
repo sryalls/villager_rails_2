@@ -4,7 +4,6 @@ RSpec.feature "HexMap", type: :feature, js: true do
   let!(:user) { create(:user) }
   let!(:tile) { create(:tile) }
   let!(:other_user) { create(:user, email: 'other@example.com') }
-  # let!(:village) { create(:village, user: user, tile: tile) }
   let!(:other_tile) { create(:tile, x: 2, y: 2) }
   let!(:other_village) { create(:village, user: other_user, tile: other_tile) }
 
