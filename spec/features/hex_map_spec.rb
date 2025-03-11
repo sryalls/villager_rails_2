@@ -40,9 +40,9 @@ RSpec.feature "HexMap", type: :feature, js: true do
     scenario "User navigates to own existing village" do
       visit root_path
       expect(page).to have_selector("[data-test-target='hex-button-show-#{tile.x}#{tile.y}']")
-
-
-      find("[data-test-target='hex-button-show-#{tile.x}#{tile.y}']").click
+      polygon = find("[data-test-target='hex-button-show-#{tile.x}#{tile.y}'] polygon")
+      expect(polygon).to be_visible
+      page.execute_script("arguments[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));", polygon.native)
       page.find('h1', text: "#{user.username}'s Village")
       page.find('p', text: "Welcome to your village, #{user.username}!")
     end
