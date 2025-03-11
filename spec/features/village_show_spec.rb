@@ -10,7 +10,10 @@ RSpec.feature "VillageShow", type: :feature, js: true do
   let!(:tag2) { create(:tag, name: "Furniture") }
   let!(:cost1) { create(:cost, building: building1, tag: tag1, quantity: 50) }
   let!(:cost2) { create(:cost, building: building2, tag: tag2, quantity: 10) }
-
+  let!(:resource1) { create(:resource, name: "Wood") }
+  let!(:resource2) { create(:resource, name: "Stone") }
+  let!(:village_resource1) { create(:village_resource, village: village, resource: resource1, count: 100) }
+  let!(:village_resource2) { create(:village_resource, village: village, resource: resource2, count: 200) }
   before do
     sign_in user
     visit village_path(village)
@@ -46,6 +49,14 @@ RSpec.feature "VillageShow", type: :feature, js: true do
     within("#built-buildings") do
       expect(page).to have_content("Farm")
       expect(page).to have_content("House")
+    end
+  end
+
+  scenario "User sees the list of resources with quantities" do
+    visit village_path(village)
+    within('[data-test="resources-list"]') do
+      expect(page).to have_content("Wood: 100")
+      expect(page).to have_content("Stone: 200")
     end
   end
 end

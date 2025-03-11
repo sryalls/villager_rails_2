@@ -26,6 +26,7 @@ class VillagesController < ApplicationController
 
   def show
     @buildings = Building.all
+    @village_resources = @village.village_resources.includes(:resource)
   end
 
   private
