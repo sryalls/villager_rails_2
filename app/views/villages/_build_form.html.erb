@@ -1,11 +1,11 @@
 <div data-controller="build">
   <button data-build-target="buildButton" id="build-button" data-test="build-button">Build</button>
-  <div data-build-target="buildDropdown" id="build-dropdown" style="display: none;">
+  <div data-build-target="buildDropdown" id="build-dropdown">
     <%= form_with model: [@village, VillageBuilding.new], local: true do |form| %>
-    <% @buildings.each do |building| %>
+      <% @buildings.each do |building| %>
         <div>
           <label>
-            <%= radio_button_tag 'village_building[building_id]', building.id, false, disabled: !@village.has_required_resources?(building) %>
+            <%= radio_button_tag 'village_building[building_id]', building.id, false, disabled: !@village.has_required_resources?(building), data: { action: "change->build#toggleResourceSelectors", building_id: building.id } %>
             <strong><%= building.name %></strong>
             <ul>
               <% building.costs.each do |cost| %>
@@ -13,8 +13,10 @@
               <% end %>
             </ul>
           </label>
+          <%= render partial: 'resource_selectors', locals: { building: building } %>
         </div>
-      <% end %>      <%= form.submit "Build", data: { test: "form-submit-button" } %>
+      <% end %>
+      <%= form.submit "Build", data: { test: "form-submit-button", "build-target": "formSubmitButton" }, disabled: true %>
     <% end %>
   </div>
 </div>
