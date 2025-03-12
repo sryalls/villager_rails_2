@@ -5,7 +5,7 @@
     <% @buildings.each do |building| %>
         <div>
           <label>
-            <%= radio_button_tag 'village_building[building_id]', building.id %>
+            <%= radio_button_tag 'village_building[building_id]', building.id, false, disabled: !@village.has_required_resources?(building) %>
             <strong><%= building.name %></strong>
             <ul>
               <% building.costs.each do |cost| %>
