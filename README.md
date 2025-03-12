@@ -1,11 +1,11 @@
 # Villager
 
-This is a new Rails application.
+Villager is a settlment constrcution game built on Ruby on Rails
 
 ## Requirements
 
 - Ruby 3.2.0
-- Rails (latest stable)
+- Rails 8.0.1
 
 ## Installation
 
@@ -29,29 +29,23 @@ This is a new Rails application.
     gem install rails
     ```
 
-4. Create a new Rails application:
-
-    ```sh
-    rails new villager -d postgresql
-    cd villager
-    ```
-
-5. Setup the database:
+4. Setup the database:
 
     ```sh
     rails db:create
-    rails db:migrate
+    rails db:schema:load
     ```
 
-6. Start the Rails server:
-
+5. Start the Rails server:
     ```sh
     rails server
     ```
 
     Open your web browser and go to `http://localhost:3000`.
 
-7. for testing, ensure that the correct version of chromedriver is installed and in the correct place: 
+
+## Testing
+for testing, ensure that the correct version of chromedriver is installed and in the correct place: 
 ```
 wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
 
