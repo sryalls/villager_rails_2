@@ -51,6 +51,9 @@ RSpec.feature "VillageShow", type: :feature, js: true do
     within("#built-buildings") do
       expect(page).to have_content("Farm")
     end
+    within("#resources-list") do
+      expect(page).to have_content("Wood: 50")
+    end
   end
 
   scenario "Build button enabled with required resources" do
