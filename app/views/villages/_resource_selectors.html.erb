@@ -1,0 +1,21 @@
+<div class="resource-selectors" data-build-target="resourceSelectors" data-building-id="<%= building.id %>">
+  <% building.costs.each do |cost| %>
+    <div data-cost-quantity="<%= cost.quantity %>" data-tag-name="<%= cost.tag.name %>">
+      <strong><%= cost.tag.name %>:</strong>
+      <% @village.resources.joins(:tags).where(tags: { id: cost.tag_id }).each do |resource| %>
+        <div>
+          <label>
+            <%= resource.name %>:
+            <%= number_field_tag "village_building[resources][#{resource.id}]", 0, \
+              min: 0, \
+              max: [cost.quantity, @village.village_resources.find_by(resource: resource).count].min, \
+              autocomplete: "off", \
+              data: { action: "input->build#validateResourceSelection", \
+                      cost_quantity: cost.quantity, \
+                      tag_name: cost.tag.name } %>
+          </label>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
