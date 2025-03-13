@@ -1,6 +1,6 @@
 class VillagesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_village, only: [ :show ]
+  before_action :set_village, only: [ :show, :resource_selectors ]
   before_action :authorize_owner, only: [ :show ]
 
   def create
@@ -29,10 +29,15 @@ class VillagesController < ApplicationController
     @village_resources = @village.village_resources.includes(:resource)
   end
 
+  def resource_selectors
+    @building = Building.find(params[:building_id])
+    render turbo_stream: turbo_stream.replace("resource-selectors-frame", partial: "resource_selectors", locals: { building: @building, village: @village })
+  end
+
   private
 
   def set_village
-    @village = Village.find(params[:id])
+    @village = Village.find(params[:id] || params[:village_id])
   end
 
   def authorize_owner

@@ -23,6 +23,7 @@ RSpec.feature "VillageShow", type: :feature, js: true do
     visit village_path(village)
     inject_csrf_token
   end
+
   scenario "User sees 'Build' button and radio list of available buildings" do
     expect(page).to have_button("Build")
     find('[data-test="build-button"]').click
@@ -35,10 +36,11 @@ RSpec.feature "VillageShow", type: :feature, js: true do
     expect(page).to have_content("50 Building Material")
     expect(page).to have_content("10 Furniture")
   end
+
   scenario "User sees resource selectors" do
     find('[data-test="build-button"]').click
     choose "Farm"
-    expect(page).to have_selector("div.resource-selectors[data-building-id='#{building1.id}'].active")
+    expect(page).to have_selector("div.resource-selectors[data-building-id='#{building1.id}']")
     expect(page).to have_selector("input[type='number'][data-tag-name='Building Material']")
   end
 
@@ -48,23 +50,27 @@ RSpec.feature "VillageShow", type: :feature, js: true do
     fill_in "village_building[resources][#{resource1.id}]", with: 50
     expect(page).to have_field("village_building[resources][#{resource1.id}]", with: 50)
     find('[data-test="form-submit-button"]').click
+    expect(page).to have_current_path(village_path(village), ignore_query: true)
     within("#built-buildings") do
       expect(page).to have_content("Farm")
     end
+    within("#resources-list-content") do
+      expect(page).to have_content("Wood: 50")
+    end
   end
 
-  scenario "Build button enabled with required resources" do
+  scenario "Confirm button enabled with required resources" do
     find('[data-test="build-button"]').click
     choose "Farm"
     fill_in "village_building[resources][#{resource1.id}]", with: 50
-    expect(page).to have_button("Build", disabled: false)
+    expect(page).to have_button("Confirm", disabled: false)
   end
 
-  scenario "Build button remains disabled if resources are insufficient" do
+  scenario "Confirm button remains disabled if resources are insufficient" do
     find('[data-test="build-button"]').click
     choose "Farm"
     fill_in "village_building[resources][#{resource1.id}]", with: 5
-    expect(page).to have_button("Build", disabled: true)
+    expect(page).to have_button("Confirm", disabled: true)
   end
 
   scenario "User sees the list of built buildings" do
