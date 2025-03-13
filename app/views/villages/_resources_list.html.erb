@@ -1,6 +1,6 @@
 <h2>Resources</h2>
-<ul data-test="resources-list">
-  <% @village_resources.each do |village_resource| %>
+<ul id="resources-list" data-test="resources-list">
+  <% village_resources.each do |village_resource| %>
   <li><%= village_resource.resource.name %>: <%= village_resource.count %></li>
   <% end %>
 </ul>

@@ -11,12 +11,22 @@ class VillageBuildingsController < ApplicationController
       @village.buildings << @building
       respond_to do |format|
         format.html { redirect_to @village, notice: "Building was successfully added." }
-        format.turbo_stream
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.replace("flash", partial: "shared/flash", locals: { notice: "Building was successfully added." }),
+            turbo_stream.replace("resources-list", partial: "villages/resources_list", locals: { village_resources: @village.village_resources }),
+            turbo_stream.replace("built-buildings", partial: "villages/built_buildings", locals: { buildings: @village.buildings })
+          ]
+        end
       end
     else
       respond_to do |format|
         format.html { redirect_to @village, alert: "Insufficient resources to build this building." }
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("flash", partial: "shared/flash", locals: { alert: "Insufficient resources to build this building." }) }
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.replace("flash", partial: "shared/flash", locals: { alert: "Insufficient resources to build this building." })
+          ]
+        end
       end
     end
   end
@@ -39,6 +49,7 @@ class VillageBuildingsController < ApplicationController
   end
 
   def deduct_resources(resource_params)
+    raise "a"
     resource_params.to_h.each do |resource_id, quantity|
       village_resource = @village.village_resources.find_by(resource_id: resource_id)
       village_resource.update(count: village_resource.count - quantity.to_i)

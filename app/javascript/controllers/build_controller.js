@@ -16,6 +16,8 @@ export default class extends Controller {
 
   toggleResourceSelectors(event) {
     const buildingId = event.target.dataset.buildingId;
+    const villageId = this.element.dataset.villageId;
+
     this.resourceSelectorsTargets.forEach((selector) => {
       if (selector.dataset.buildingId === buildingId) {
         selector.style.display = "block";
@@ -25,7 +27,11 @@ export default class extends Controller {
         selector.classList.remove("active");
       }
     });
-    this.validateResourceSelection();
+
+    const turboFrame = document.getElementById("resource-selectors-frame");
+    if (turboFrame) {
+      turboFrame.src = `/villages/${villageId}/resource_selectors?building_id=${buildingId}`;
+    }  
   }
 
   calculateResourceTotals(inputs) {
@@ -63,7 +69,13 @@ export default class extends Controller {
     return allResourcesValid;
   }
 
-  validateResourceSelection() {
+  validateResourceSelection(event) {
+    const input = event.target;
+    const value = parseInt(input.value, 10);
+    if (!isNaN(value) && value >= 0) {
+      input.value = value;
+    }
+
     let allResourcesValid = true;
 
     allResourcesValid = this.resourceSelectorsTargets.every((selector) => {
@@ -74,6 +86,7 @@ export default class extends Controller {
       }
       return true;
     });
+
     this.formSubmitButtonTarget.disabled = !allResourcesValid;
   }
 }

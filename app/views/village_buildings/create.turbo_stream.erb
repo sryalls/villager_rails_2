@@ -2,8 +2,10 @@
   <div id="built-buildings">
     <%= render 'villages/built_buildings', buildings: @village.buildings %>
   </div>
-
+<% end %>
 
 <%= turbo_stream.replace "resources-list" do %>
-  <%= render 'villages/resources_list', village: @village %>
+  <div id="resources-list">
+    <%= render 'villages/resources_list', village_resources: @village.village_resources %>
+  </div>
 <% end %>
