@@ -16,16 +16,12 @@ export default class extends Controller {
 
   toggleResourceSelectors(event) {
     const buildingId = event.target.dataset.buildingId;
-    this.resourceSelectorsTargets.forEach((selector) => {
-      if (selector.dataset.buildingId === buildingId) {
-        selector.style.display = "block";
-        selector.classList.add("active");
-      } else {
-        selector.style.display = "none";
-        selector.classList.remove("active");
-      }
-    });
-    this.validateResourceSelection();
+    const villageId = this.element.dataset.villageId;
+
+    const turboFrame = document.getElementById("resource-selectors-frame");
+    if (turboFrame) {
+      turboFrame.src = `/villages/${villageId}/resource_selectors?building_id=${buildingId}`;
+    }
   }
 
   calculateResourceTotals(inputs) {
@@ -63,17 +59,22 @@ export default class extends Controller {
     return allResourcesValid;
   }
 
-  validateResourceSelection() {
+  validateResourceSelection(event) {
+    const input = event.target;
+    const value = parseInt(input.value, 10);
+    if (!isNaN(value) && value >= 0) {
+      input.value = value;
+    }
+
     let allResourcesValid = true;
 
-    allResourcesValid = this.resourceSelectorsTargets.every((selector) => {
-      if (selector.classList.contains("active")) {
-        const inputs = selector.querySelectorAll("input[type='number']");
-        const resourceTotals = this.calculateResourceTotals(inputs);
-        return this.validateResourceTotals(resourceTotals, selector);
-      }
-      return true;
-    });
+    const selector = this.resourceSelectorsTargets[0]; // Assuming only one set of resource selectors is rendered at a time
+    if (selector) {
+      const inputs = selector.querySelectorAll("input[type='number']");
+      const resourceTotals = this.calculateResourceTotals(inputs);
+      allResourcesValid = this.validateResourceTotals(resourceTotals, selector);
+    }
+
     this.formSubmitButtonTarget.disabled = !allResourcesValid;
   }
 }

@@ -1,3 +1,15 @@
+<%= turbo_stream.replace "flash" do %>
+  <div id="flash">
+    <%= render partial: "shared/flash", locals: { notice: I18n.t('flash.village_buildings.create.success') } %>
+  </div>
+<% end %>
+
+<%= turbo_stream.replace "resources-list-content" do %>
+  <div id="resources-list-content">
+    <%= render 'villages/resources_list', village_resources: @village.village_resources %>
+  </div>
+<% end %>
+
 <%= turbo_stream.replace "built-buildings" do %>
   <div id="built-buildings">
     <%= render 'villages/built_buildings', buildings: @village.buildings %>

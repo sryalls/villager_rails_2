@@ -1,22 +1,30 @@
-<div data-controller="build">
-  <button data-build-target="buildButton" id="build-button" data-test="build-button">Build</button>
-  <div data-build-target="buildDropdown" id="build-dropdown">
-    <%= form_with model: [@village, VillageBuilding.new], local: true do |form| %>
-      <% @buildings.each do |building| %>
-        <div>
-          <label>
-            <%= radio_button_tag 'village_building[building_id]', building.id, false, disabled: !@village.has_required_resources?(building), data: { action: "change->build#toggleResourceSelectors", building_id: building.id } %>
-            <strong><%= building.name %></strong>
-            <ul>
-              <% building.costs.each do |cost| %>
-                <li><%= cost.quantity %> <%= cost.tag.name %></li>
-              <% end %>
-            </ul>
-          </label>
-          <%= render partial: 'resource_selectors', locals: { building: building } %>
+<div data-controller="build" data-village-id="<%= @village.id %>">
+  <button type="button" class="btn btn-primary" data-build-target="buildButton" id="build-button" data-test="build-button">Build</button>
+  <%= form_with model: [@village, VillageBuilding.new], local: true do |form| %>
+    <div class="row mt-3">
+      <div class="col-md-6">
+        <div data-build-target="buildDropdown" id="build-dropdown">
+          <% @buildings.each do |building| %>
+            <div class="mb-3">
+              <label class="form-check-label">
+                <%= radio_button_tag 'village_building[building_id]', building.id, false, class: "form-check-input", disabled: !@village.has_required_resources?(building), data: { action: "change->build#toggleResourceSelectors", building_id: building.id } %>
+                <strong><%= building.name %></strong>
+                <ul>
+                  <% building.costs.each do |cost| %>
+                    <li><%= cost.quantity %> <%= cost.tag.name %></li>
+                  <% end %>
+                </ul>
+              </label>
+            </div>
+          <% end %>
         </div>
-      <% end %>
-      <%= form.submit "Build", data: { test: "form-submit-button", "build-target": "formSubmitButton" }, disabled: true %>
-    <% end %>
-  </div>
+      </div>
+      <div class="col-md-6">
+        <%= turbo_frame_tag "resource-selectors-frame" %>
+      </div>
+      <div class="col-md-12 text-right">
+        <%= form.submit "Confirm", class: "btn btn-success mt-3", data: { test: "form-submit-button", build_target: "formSubmitButton" }, disabled: true %>
+      </div>
+    </div>
+  <% end %>
 </div>

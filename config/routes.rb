@@ -17,6 +17,9 @@ Rails.application.routes.draw do
   root "home#index"
 
   resources :villages, only: [ :create, :show ] do
+    member do
+      get "resource_selectors"
+    end
     resources :village_buildings, only: [ :create ]
   end
 end

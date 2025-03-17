@@ -2,12 +2,8 @@
 <h1><%= current_user.username %>'s Village</h1>
 <p>Welcome to your village, <%= current_user.username %>!</p>
 <h2>Resources</h2>
-<ul data-test="resources-list">
-  <% @village_resources.each do |village_resource| %>
-  <li><%= village_resource.resource.name %>: <%= village_resource.count %></li>
-  <% end %>
-</ul>
-<%= render 'build_form', village: @village, buildings: @buildings %>
-<div id="built-buildings">
-    <%= render 'built_buildings', buildings: @village.buildings %>
+<div id="resources-list">
+  <%= render 'villages/resources_list', village_resources: @village.village_resources %>
 </div>
+<%= render 'build_form', village: @village, buildings: @buildings %>
+<%= render 'built_buildings', buildings: @village.buildings %>
