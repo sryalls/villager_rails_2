@@ -72,6 +72,16 @@ barracks.costs.find_or_create_by!(tag: Tag.find_by(name: 'building materials'), 
 barracks.costs.find_or_create_by!(tag: Tag.find_by(name: 'fortifying materials'), quantity: 30)
 woodcutter.costs.find_or_create_by!(tag: Tag.find_by(name: 'fuel'), quantity: 20)
 
+# Create building outputs
+lumber = Resource.find_by(name: 'Lumber')
+
+BuildingOutput.find_or_create_by!(building: woodcutter, resource: lumber, quantity: 1)
+
+potatoes = Resource.find_by(name: 'Potatoes')
+farm = Building.find_by(name: 'Farm')
+
+BuildingOutput.find_or_create_by!(building: farm, resource: potatoes, quantity: 1)
+
 
 # Adjust village resources to test affordability
 VillageResource.find_or_create_by!(village: village, resource: Resource.find_by(name: 'Lumber'), count: 60)
