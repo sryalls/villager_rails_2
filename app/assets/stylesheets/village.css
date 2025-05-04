@@ -9,10 +9,10 @@ body, html {
     display: none;
   }
   
-  .resource-selectors {
-    display: none;
+  #resource-selectors-frame {
+    display: block;
   }
   
-  .resource-selectors.active {
+  .resource-selectors {
     display: block;
   }

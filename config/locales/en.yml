@@ -28,4 +28,11 @@
 #       enabled: "ON"
 
 en:
-  hello: "Hello world"
+  activerecord:
+    models:
+      village_building: "Village Building"
+  flash:
+    village_buildings:
+      create:
+        success: "Building was successfully added."
+        failure: "Insufficient resources to build this building."
