@@ -49,9 +49,11 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
-
       - name: Lint code for consistent style
-        run: bin/rubocop -f github
+        run: |
+          set -e
+          bundle exec rubocop --config .rubocop.yml -f github
+          bundle exec erb_lint --config .erb_lint.yml app/views
 
   test:
     runs-on: ubuntu-latest
