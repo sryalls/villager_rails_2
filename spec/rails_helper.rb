@@ -14,9 +14,6 @@ require 'selenium/webdriver'
 require 'devise'
 
 require 'webdrivers'
-# Set the path to the local ChromeDriver
-Selenium::WebDriver::Chrome::Service.driver_path = File.join(Dir.pwd, 'bin', 'chromedriver-linux64', 'chromedriver')
-
 # Initialize Devise
 Devise.setup do |config|
   # Your Devise configuration here
@@ -89,16 +86,25 @@ RSpec.configure do |config|
 
   config.include CsrfHelper, type: :feature
 
-  # Configure Capybara to use Selenium with Chrome
-  Capybara.default_driver = :selenium_chrome_headless
-  Capybara.javascript_driver = :selenium_chrome_headless
+  # Set the default driver for non-JS tests
+  Capybara.default_driver = :rack_test
 
-  # If you want to use the non-headless version of Chrome, use this instead:
-  # Capybara.default_driver = :selenium_chrome
+  # Set the JavaScript driver for JS-enabled tests
+  # Capybara.javascript_driver = :selenium_chrome_headless
 
-  # Ensure that Capybara runs after the Rails app is loaded
-  config.before(:each, type: :system) do
-    driven_by(:selenium_chrome_headless)
+  # Use Selenium only for tests tagged with `:selenium`
+
+  # Conditionally set the ChromeDriver path only for JS tests
+
+
+  config.before(:each, js: true) do
+    Selenium::WebDriver::Chrome::Service.driver_path = File.join(Dir.pwd, 'bin', 'chromedriver-linux64', 'chromedriver')
+    Capybara.current_driver = :selenium_chrome_headless
+  end
+
+  # Reset to the default driver after each test
+  config.after(:each) do
+    Capybara.use_default_driver
   end
 
   # Include FactoryBot methods
