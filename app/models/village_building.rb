@@ -15,4 +15,8 @@ class VillageBuilding < ApplicationRecord
       village_resource.update(count: village_resource.count - quantity.to_i)
     end
   end
+
+  def has_building_outputs?
+    building.building_outputs.exists?
+  end
 end
