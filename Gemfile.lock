@@ -295,6 +295,8 @@ GEM
     rake (13.2.1)
     rdoc (6.13.1)
       psych (>= 4.0.0)
+    redis-client (0.24.0)
+      connection_pool
     regexp_parser (2.10.0)
     reline (0.6.1)
       io-console (~> 0.5)
@@ -356,6 +358,8 @@ GEM
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
     rubyzip (2.4.1)
+    rufus-scheduler (3.9.2)
+      fugit (~> 1.1, >= 1.11.1)
     sassc (2.4.0)
       ffi (~> 1.9)
     sassc-rails (2.1.2)
@@ -371,6 +375,15 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
+    sidekiq (8.0.3)
+      connection_pool (>= 2.5.0)
+      json (>= 2.9.0)
+      logger (>= 1.6.2)
+      rack (>= 3.1.0)
+      redis-client (>= 0.23.2)
+    sidekiq-scheduler (6.0.0)
+      rufus-scheduler (~> 3.2)
+      sidekiq (>= 7.3, < 9)
     smart_properties (1.17.0)
     solid_cable (3.0.7)
       actioncable (>= 7.2)
@@ -473,6 +486,8 @@ DEPENDENCIES
   rubocop-rails-omakase
   sassc-rails
   selenium-webdriver
+  sidekiq
+  sidekiq-scheduler
   solid_cable
   solid_cache
   solid_queue

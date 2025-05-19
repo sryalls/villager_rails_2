@@ -1,0 +1,12 @@
+:concurrency: 5
+:queues:
+  - default
+
+:redis:
+  url: redis://localhost:6379/0
+
+:scheduler:
+  :schedule:
+    play_loop_job:
+      every: ["20s"]
+      class: "PlayLoopJob"
