@@ -1,0 +1,5 @@
+<turbo-stream target="resources-list-content" action="replace">
+  <template>
+    <%= render partial: "resources_list", locals: { village_resources: @village.village_resources.includes(:resource) } %>
+  </template>
+</turbo-stream>

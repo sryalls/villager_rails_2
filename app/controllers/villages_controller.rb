@@ -34,6 +34,13 @@ class VillagesController < ApplicationController
     render turbo_stream: turbo_stream.replace("resource-selectors-frame", partial: "resource_selectors", locals: { building: @building, village: @village })
   end
 
+  def resources_stream
+    @village = Village.find(params[:id])
+    respond_to do |format|
+      format.turbo_stream
+    end
+  end
+
   private
 
   def set_village

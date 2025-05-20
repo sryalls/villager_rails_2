@@ -7,3 +7,13 @@
 </div>
 <%= render 'build_form', village: @village, buildings: @buildings %>
 <%= render 'built_buildings', buildings: @village.buildings %>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    function pollResources() {
+      fetch("<%= resources_stream_village_path(@village, format: :turbo_stream) %>")
+        .then(response => response.text())
+        .then(html => Turbo.renderStreamMessage(html));
+    }
+    setInterval(pollResources, 1000);
+  });
+</script>
