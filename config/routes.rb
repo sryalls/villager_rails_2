@@ -21,7 +21,8 @@ Rails.application.routes.draw do
 
   resources :villages, only: [ :create, :show ] do
     member do
-      get "resource_selectors"
+      get "resource_selectors" # @todo - change to symbol
+      get :resources_stream
     end
     resources :village_buildings, only: [ :create ]
   end
