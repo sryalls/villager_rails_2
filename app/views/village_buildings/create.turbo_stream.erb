@@ -4,10 +4,8 @@
   </div>
 <% end %>
 
-<%= turbo_stream.replace "resources-list-content" do %>
-  <div id="resources-list-content">
-    <%= render 'villages/resources_list', village_resources: @village.village_resources %>
-  </div>
+<%= turbo_stream.update "resources-list-content" do %>
+  <%= render 'villages/resources_list', village_resources: @village.village_resources %>
 <% end %>
 
 <%= turbo_stream.replace "built-buildings" do %>

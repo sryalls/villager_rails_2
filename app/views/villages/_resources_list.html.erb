@@ -1,7 +1,5 @@
-<div id="resources-list-content" data-test="resources-list">
-  <ul>
-    <% village_resources.each do |resource| %>
-      <li><%= resource.resource.name %>: <%= resource.count %></li>
-    <% end %>
-  </ul>
-</div>
+<ul data-test="resources-list">
+  <% village_resources.each do |resource| %>
+    <li><%= resource.resource.name %>: <%= resource.count %></li>
+  <% end %>
+</ul>

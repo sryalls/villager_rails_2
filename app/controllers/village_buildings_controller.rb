@@ -14,7 +14,7 @@ class VillageBuildingsController < ApplicationController
         format.turbo_stream do
           render turbo_stream: [
             turbo_stream.replace("flash", partial: "shared/flash", locals: { notice: I18n.t("flash.village_buildings.create.success") }),
-            turbo_stream.replace("resources-list", partial: "villages/resources_list", locals: { village_resources: @village.village_resources }),
+            turbo_stream.update("resources-list-content", partial: "villages/resources_list", locals: { village_resources: @village.village_resources }),
             turbo_stream.replace("built-buildings", partial: "villages/built_buildings", locals: { buildings: @village.buildings })
           ]
         end
