@@ -476,7 +476,7 @@ DEPENDENCIES
   jbuilder
   kamal
   pg (~> 1.1)
-  propshaft (~> 1.1.0)
+  propshaft (= 1.1.0)
   pry
   pry-rails
   puma (>= 5.0)
