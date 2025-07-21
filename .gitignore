@@ -48,4 +48,5 @@ yarn-debug.log*
 
 # Ignore local ChromeDriver binary
 bin/chromedriver-linux64/
-bin/fix-cachetmp_old/
+bin/fix-cache
+tmp_old/
