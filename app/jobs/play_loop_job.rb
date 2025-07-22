@@ -14,7 +14,7 @@ class PlayLoopJob < ApplicationJob
     Rails.logger.info "Play loop started at #{Time.current} (Loop ID: #{loop_state.id})"
 
     begin
-      result = PlayLoopService.call(loop_cycle_id: loop_state.id)
+      result = PlayLoopService.call(loop_state: loop_state)
       handle_service_result(result, context: "Play loop, Loop ID: #{loop_state.id}")
 
       # Mark loop as completed

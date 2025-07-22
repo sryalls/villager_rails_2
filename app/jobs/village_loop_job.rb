@@ -14,7 +14,15 @@ class VillageLoopJob < ApplicationJob
     Rails.logger.info "Village loop started for Village ID: #{village_id} at #{Time.current} (Loop ID: #{loop_state.id})"
 
     begin
-      result = VillageLoopService.call(village_id, loop_cycle_id: loop_cycle_id, village_loop_state_id: loop_state.id)
+      # Get the main play loop state for progress tracking
+      main_loop_state = GameLoopState.find_by(id: loop_cycle_id) if loop_cycle_id
+      
+      result = VillageLoopService.call(
+        village_id, 
+        loop_cycle_id: loop_cycle_id, 
+        village_loop_state_id: loop_state.id,
+        loop_state: main_loop_state
+      )
       handle_service_result(result, context: "Village ID: #{village_id}, Loop ID: #{loop_state.id}")
 
       # Mark loop as completed
