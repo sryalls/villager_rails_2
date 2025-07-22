@@ -4,7 +4,7 @@ class PlayLoopSchedulerJob < ApplicationJob
   def perform
     # Use GameLoopManager for proper state management and atomic job queuing
     success = GameLoopManager.queue_play_loop!(job_id: generate_scheduler_job_id)
-    
+
     if success
       Rails.logger.info "Play loop successfully scheduled"
     else

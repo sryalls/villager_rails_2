@@ -65,7 +65,7 @@ RSpec.describe ProduceResourcesFromBuildingService, type: :service do
         )
 
         expect(@result2.success).to be true
-        
+
         # Resource count should not change due to entity tracker idempotency
         expect(village_resource.reload.count).to eq(5)
       end
