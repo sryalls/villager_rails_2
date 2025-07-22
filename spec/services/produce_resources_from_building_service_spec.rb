@@ -37,6 +37,38 @@ RSpec.describe ProduceResourcesFromBuildingService, type: :service do
         expect(result.data[:total_quantity]).to eq(5) # 5 * 1
         expect(village_resource).to have_attributes(count: 5) # 0 + (5 * 1)
       end
+
+      it "processes resource production successfully" do
+        result = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1)
+
+        expect(result.success).to be true
+        expect(result.message).to include("Successfully produced resources")
+        expect(result.data[:resources_produced]).to be_present
+      end
+
+      it "is idempotent - does not process twice with same job_id" do
+        job_id = "test-produce-12345"
+
+        # First call
+        @result1 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
+        expect(@result1.success).to be true
+        village_resource = VillageResource.find_by(village: village, resource: logs)
+        expect(village_resource.count).to eq(5)
+
+        # Create entity tracker for idempotency testing
+        tracker = GameLoopEntityTracker.new(job_id)
+        expect(tracker.resource_produced?(logs.id, woodcutter.id, village.id)).to be_truthy
+
+        # Second call with same cycle should be skipped at resource level
+        @result2 = ProduceResourcesFromBuildingService.call(
+          woodcutter.id, village, 1, loop_cycle_id: job_id
+        )
+
+        expect(@result2.success).to be true
+
+        # Resource count should not change due to entity tracker idempotency
+        expect(village_resource.reload.count).to eq(5)
+      end
     end
 
     context "when building does not exist" do

@@ -23,5 +23,8 @@ module Villager
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Game loop configuration
+    config.game_loop_cleanup_keep_duration = 24.hours
   end
 end

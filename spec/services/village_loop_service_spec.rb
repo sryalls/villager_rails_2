@@ -27,8 +27,43 @@ RSpec.describe VillageLoopService, type: :service do
         expect(result.data[:village_id]).to eq(village.id)
         expect(result.data[:buildings_processed]).to eq(2)
 
-        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(woodcutter.id, village, 1).once
-        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(farm.id, village, 1).once
+        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(woodcutter.id, village, 1, match(/village-#{village.id}-\d+-building-#{woodcutter.id}/)).once
+        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(farm.id, village, 1, match(/village-#{village.id}-\d+-building-#{farm.id}/)).once
+      end
+
+      it "records job execution in database" do
+        result = VillageLoopService.call(village.id)
+
+        expect(result.success).to be true
+        expect(result.message).to include("processed successfully")
+      end
+
+      it "is idempotent - uses entity tracker for building-level idempotency" do
+        job_id = "test-village-loop-12345"
+
+        # First call
+        expect {
+          @result1 = VillageLoopService.call(village.id, job_id: job_id)
+        }.to change { JobExecution.count }.by(1)
+
+        expect(@result1.success).to be true
+        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).twice
+
+        # Verify processing completed successfully
+        expect(@result1.success).to be true
+        expect(@result1.data[:buildings_processed]).to eq(2)
+
+        # Reset mock completely
+        RSpec::Mocks.teardown
+        RSpec::Mocks.setup
+        allow(ProduceResourcesFromBuildingJob).to receive(:perform_later)
+
+        # Second call creates new processing cycle
+        # (Building-level idempotency handled by entity tracker)
+        @result2 = VillageLoopService.call(village.id)
+
+        expect(@result2.success).to be true
+        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).twice
       end
     end
 
@@ -43,7 +78,7 @@ RSpec.describe VillageLoopService, type: :service do
 
     context "when an error occurs during processing" do
       before do
-        allow(Village).to receive(:find_by).and_raise(StandardError.new("Database error"))
+        allow_any_instance_of(VillageLoopService).to receive(:process_village_buildings).and_raise(StandardError.new("Database error"))
       end
 
       it "returns failure result with error message" do

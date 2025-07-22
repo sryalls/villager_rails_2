@@ -13,11 +13,11 @@ RSpec.describe ProduceResourcesFromBuildingJob, type: :job do
 
     before do
       allow(ProduceResourcesFromBuildingService).to receive(:call).and_return(success_result)
-      ProduceResourcesFromBuildingJob.perform_now(woodcutter.id, village, 2)
+      ProduceResourcesFromBuildingJob.perform_now(woodcutter.id, village, 2, job_id: "test-job-id")
     end
 
     it "calls ProduceResourcesFromBuildingService with the correct parameters" do
-      expect(ProduceResourcesFromBuildingService).to have_received(:call).with(woodcutter.id, village, 2)
+      expect(ProduceResourcesFromBuildingService).to have_received(:call).with(woodcutter.id, village, 2, job_id: "test-job-id")
     end
   end
 
