@@ -11,7 +11,7 @@ class DropJobExecutionsTable < ActiveRecord::Migration[8.0]
       t.references :building, null: true, foreign_key: true
       t.timestamps
 
-      t.index [:job_id, :job_type], unique: true
+      t.index [ :job_id, :job_type ], unique: true
       t.index :job_type
       t.index :executed_at
     end

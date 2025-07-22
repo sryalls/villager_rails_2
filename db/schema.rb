@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_22_162316) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_22_163018) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -89,21 +89,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_162316) do
     t.index ["village_id"], name: "index_village_buildings_on_village_id"
   end
 
-  create_table "village_loop_failures", force: :cascade do |t|
-    t.bigint "village_id", null: false
-    t.string "loop_cycle_id"
-    t.text "error_message"
-    t.datetime "failed_at", null: false
-    t.boolean "recovered", default: false
-    t.datetime "recovered_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["loop_cycle_id"], name: "index_village_loop_failures_on_loop_cycle_id"
-    t.index ["recovered", "failed_at"], name: "index_village_loop_failures_on_recovered_and_failed_at"
-    t.index ["village_id", "failed_at"], name: "index_village_loop_failures_on_village_id_and_failed_at"
-    t.index ["village_id"], name: "index_village_loop_failures_on_village_id"
-  end
-
   create_table "village_resources", force: :cascade do |t|
     t.bigint "village_id", null: false
     t.bigint "resource_id", null: false
@@ -129,7 +114,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_162316) do
   add_foreign_key "costs", "tags"
   add_foreign_key "village_buildings", "buildings"
   add_foreign_key "village_buildings", "villages"
-  add_foreign_key "village_loop_failures", "villages"
   add_foreign_key "village_resources", "resources"
   add_foreign_key "village_resources", "villages"
   add_foreign_key "villages", "tiles"

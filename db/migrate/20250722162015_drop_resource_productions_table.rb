@@ -10,9 +10,9 @@ class DropResourceProductionsTable < ActiveRecord::Migration[8.0]
       t.string :loop_cycle_id
       t.timestamps
 
-      t.index [:village_id, :building_id, :resource_id, :produced_at], 
+      t.index [ :village_id, :building_id, :resource_id, :produced_at ],
               name: "index_resource_productions_on_unique_production"
-      t.index [:village_id, :building_id, :produced_at]
+      t.index [ :village_id, :building_id, :produced_at ]
       t.index :loop_cycle_id
     end
   end
