@@ -50,8 +50,7 @@ RSpec.describe ProduceResourcesFromBuildingService, type: :service do
         job_id = "test-produce-12345"
 
         # First call
-        expect {
-          @result1 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
+        @result1 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
         expect(@result1.success).to be true
         village_resource = VillageResource.find_by(village: village, resource: logs)
         expect(village_resource.count).to eq(5)
