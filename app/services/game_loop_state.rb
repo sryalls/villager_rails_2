@@ -32,7 +32,7 @@ class GameLoopState
     # Start a new loop (atomic operation using Redis)
     def start_loop!(loop_type, identifier = nil, sidekiq_job_id = nil)
       cache_key = running_loop_key(loop_type, identifier)
-      
+
       # Try to acquire lock atomically
       loop_id = SecureRandom.uuid
       state_data = {
@@ -48,7 +48,7 @@ class GameLoopState
 
       # Use Redis SET with NX (only set if not exists) for atomic operation
       success = Rails.cache.write(cache_key, state_data, expires_in: DEFAULT_TTL, unless_exist: true)
-      
+
       if success
         # Also store by ID for lookups
         Rails.cache.write(state_key(loop_id), state_data, expires_in: DEFAULT_TTL)
@@ -114,7 +114,7 @@ class GameLoopState
   # Save state to Redis
   def save!
     return false unless valid?
-    
+
     state_data = {
       id: id,
       loop_type: loop_type,
@@ -130,13 +130,13 @@ class GameLoopState
 
     # Update by ID
     Rails.cache.write(self.class.send(:state_key, id), state_data, expires_in: DEFAULT_TTL)
-    
+
     # Update running cache if still running
     if running?
       running_key = self.class.send(:running_loop_key, loop_type, identifier)
       Rails.cache.write(running_key, state_data, expires_in: DEFAULT_TTL)
     end
-    
+
     true
   end
 

@@ -17,13 +17,13 @@ class PlayLoopJob < ApplicationJob
       end
       loop_state = GameLoopState.start_loop!("play_loop", nil, job_id)
     end
-    
+
     # Verify state is still in running status
     unless loop_state.running?
       Rails.logger.info "Loop state #{loop_state.id} is not in running status, skipping execution"
       return
     end
-    
+
     begin
       result = PlayLoopService.call(loop_state: loop_state)
       handle_service_result(result, context: "Play loop job")

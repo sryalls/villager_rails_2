@@ -19,7 +19,7 @@ class GameLoopManager
     false
   end
 
-  # Queue a village loop job with proper state management  
+  # Queue a village loop job with proper state management
   # Creates the GameLoopState before enqueueing the job for maximum robustness
   def self.queue_village_loop!(village_id, loop_cycle_id: nil, job_id: nil)
     unless GameLoopState.can_start_loop?("village_loop", village_id.to_s)
