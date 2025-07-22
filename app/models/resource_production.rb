@@ -15,7 +15,7 @@ class ResourceProduction < ApplicationRecord
   # Check if building already produced resources in a specific cycle (preferred method)
   def self.produced_in_cycle?(cycle_id, building, village)
     return false unless cycle_id
-    
+
     where(village: village, building: building, loop_cycle_id: cycle_id)
       .exists?
   end
@@ -24,7 +24,7 @@ class ResourceProduction < ApplicationRecord
   def self.recently_produced?(village, building, time_window = nil)
     Rails.logger.warn "WARNING: recently_produced? is deprecated. Use produced_in_cycle? instead."
     time_window ||= Rails.application.config.resource_production_window || 25.seconds
-    
+
     where(village: village, building: building)
       .where(produced_at: time_window.ago..Time.current)
       .exists?
