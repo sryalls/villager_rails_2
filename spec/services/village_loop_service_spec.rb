@@ -16,13 +16,42 @@ RSpec.describe VillageLoopService, type: :service do
 
       # Mock ProduceResourcesFromBuildingJob
       allow(ProduceResourcesFromBuildingJob).to receive(:perform_later)
-
-      VillageLoopService.new.call(village.id)
     end
 
-    it "enqueues ProduceResourcesFromBuildingJob for each building with the correct parameters" do
-      expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(woodcutter.id, village, 1).once
-      expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(farm.id, village, 1).once
+    context "when village exists" do
+      it "enqueues ProduceResourcesFromBuildingJob for each building and returns success" do
+        result = VillageLoopService.call(village.id)
+
+        expect(result.success).to be true
+        expect(result.message).to include("Successfully processed 2 building types")
+        expect(result.data[:village_id]).to eq(village.id)
+        expect(result.data[:buildings_processed]).to eq(2)
+
+        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(woodcutter.id, village, 1).once
+        expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).with(farm.id, village, 1).once
+      end
+    end
+
+    context "when village does not exist" do
+      it "returns failure result" do
+        result = VillageLoopService.call(999)
+
+        expect(result.success).to be false
+        expect(result.message).to eq("Village not found")
+      end
+    end
+
+    context "when an error occurs during processing" do
+      before do
+        allow(Village).to receive(:find_by).and_raise(StandardError.new("Database error"))
+      end
+
+      it "returns failure result with error message" do
+        result = VillageLoopService.call(village.id)
+
+        expect(result.success).to be false
+        expect(result.message).to include("Failed to process village")
+      end
     end
   end
 end
