@@ -5,7 +5,7 @@ gem "rails", "~> 8.0.2"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 # PINNED: Version 1.2.0+ breaks compatibility with current sassc-rails setup
 # See issue #XXX for full Propshaft migration plan
-gem "propshaft", "= 1.1.0"
+gem "propshaft", "1.2.1"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
