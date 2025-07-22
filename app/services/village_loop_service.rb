@@ -31,18 +31,23 @@ class VillageLoopService < ApplicationService
                            .select(&:has_building_outputs?)
                            .group_by(&:building_id)
 
+    # Get buildings that have already been processed in this cycle (for retry scenarios)
+    already_processed_buildings = GameLoopProgress.processed_buildings_for_village_cycle(@loop_cycle_id, village)
+    
     building_groups.each do |building_id, village_buildings|
-      # Use data-state-based idempotency - check if building already produced recently
       building = Building.find(building_id)
-      unless ResourceProduction.recently_produced?(village, building)
+      
+      # Skip if already processed in this cycle
+      unless already_processed_buildings.include?(building)
         ProduceResourcesFromBuildingJob.perform_later(
           building_id,
           village,
           village_buildings.count,
           loop_cycle_id: @loop_cycle_id
         )
+        GameLoopProgress.mark_building_processed!(@loop_cycle_id, village, building)
       else
-        Rails.logger.info "Skipping Building #{building_id} - already produced recently"
+        Rails.logger.info "Skipping Building #{building_id} - already processed in this cycle"
       end
     end
 

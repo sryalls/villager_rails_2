@@ -25,9 +25,15 @@ class PlayLoopService < ApplicationService
   private
 
   def process_all_villages(villages)
-    villages.each do |village|
-      # Pass the cycle ID so all jobs in this loop cycle are grouped together
+    # Get villages that have already been queued in this cycle (for retry scenarios)
+    already_queued_villages = GameLoopProgress.queued_villages_for_cycle(@loop_cycle_id)
+    remaining_villages = villages - already_queued_villages
+    
+    Rails.logger.info "Processing #{remaining_villages.count}/#{villages.count} villages (#{already_queued_villages.count} already queued)"
+    
+    remaining_villages.each do |village|
       VillageLoopJob.perform_later(village.id, loop_cycle_id: @loop_cycle_id)
+      GameLoopProgress.mark_village_queued!(@loop_cycle_id, village)
     end
 
     villages.count
