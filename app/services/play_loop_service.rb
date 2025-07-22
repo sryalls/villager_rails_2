@@ -1,6 +1,12 @@
 class PlayLoopService < ApplicationService
-  def initialize(loop_cycle_id: nil)
+  def initialize(loop_state: nil, loop_cycle_id: nil)
+    @loop_state = loop_state
     @loop_cycle_id = loop_cycle_id
+    
+    # For backward compatibility, if only loop_cycle_id is provided, find the state
+    if @loop_cycle_id && !@loop_state
+      @loop_state = GameLoopState.find_by(id: @loop_cycle_id)
+    end
   end
 
   def call
@@ -25,15 +31,17 @@ class PlayLoopService < ApplicationService
   private
 
   def process_all_villages(villages)
-    # Get villages that have already been queued in this cycle (for retry scenarios)
-    already_queued_villages = GameLoopProgress.queued_villages_for_cycle(@loop_cycle_id)
+    return 0 unless @loop_state
+    
+    # Get villages that have already been queued in this loop (for retry scenarios)
+    already_queued_villages = @loop_state.queued_villages
     remaining_villages = villages - already_queued_villages
-    
+
     Rails.logger.info "Processing #{remaining_villages.count}/#{villages.count} villages (#{already_queued_villages.count} already queued)"
-    
+
     remaining_villages.each do |village|
       VillageLoopJob.perform_later(village.id, loop_cycle_id: @loop_cycle_id)
-      GameLoopProgress.mark_village_queued!(@loop_cycle_id, village)
+      @loop_state.mark_village_queued!(village)
     end
 
     villages.count

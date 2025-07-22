@@ -1,8 +1,14 @@
 class VillageLoopService < ApplicationService
-  def initialize(village_id, loop_cycle_id: nil, village_loop_state_id: nil)
+  def initialize(village_id, loop_cycle_id: nil, village_loop_state_id: nil, loop_state: nil)
     @village_id = village_id
     @loop_cycle_id = loop_cycle_id
     @village_loop_state_id = village_loop_state_id
+    @loop_state = loop_state
+    
+    # For backward compatibility, if only loop_cycle_id is provided, find the state
+    if @loop_cycle_id && !@loop_state
+      @loop_state = GameLoopState.find_by(id: @loop_cycle_id)
+    end
   end
 
   def call
@@ -27,27 +33,29 @@ class VillageLoopService < ApplicationService
   private
 
   def process_village_buildings(village)
+    return 0 unless @loop_state
+    
     building_groups = village.village_buildings
                            .select(&:has_building_outputs?)
                            .group_by(&:building_id)
 
-    # Get buildings that have already been processed in this cycle (for retry scenarios)
-    already_processed_buildings = GameLoopProgress.processed_buildings_for_village_cycle(@loop_cycle_id, village)
-    
+    # Get buildings that have already been processed in this loop (for retry scenarios)
+    already_processed_buildings = @loop_state.processed_buildings_for_village(village)
+
     building_groups.each do |building_id, village_buildings|
       building = Building.find(building_id)
-      
-      # Skip if already processed in this cycle
-      unless already_processed_buildings.include?(building)
+
+      # Skip if already processed in this loop
+      unless @loop_state.building_processed?(village, building)
         ProduceResourcesFromBuildingJob.perform_later(
           building_id,
           village,
           village_buildings.count,
           loop_cycle_id: @loop_cycle_id
         )
-        GameLoopProgress.mark_building_processed!(@loop_cycle_id, village, building)
+        @loop_state.mark_building_processed!(village, building)
       else
-        Rails.logger.info "Skipping Building #{building_id} - already processed in this cycle"
+        Rails.logger.info "Skipping Building #{building_id} - already processed in this loop"
       end
     end
 
