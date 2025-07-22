@@ -5,6 +5,7 @@ class ProduceResourcesFromBuildingService < ApplicationService
     @village = village
     @building = nil
     @loop_cycle_id = loop_cycle_id
+    @entity_tracker = loop_cycle_id ? GameLoopEntityTracker.new(loop_cycle_id) : nil
   end
 
   def call
@@ -13,15 +14,8 @@ class ProduceResourcesFromBuildingService < ApplicationService
     @building = Building.find_by(id: @building_id)
     return failure_result("Building not found") unless @building
 
-    # Check if already processed in this specific cycle (simple cycle-based idempotency)
-    if ResourceProduction.produced_in_cycle?(@loop_cycle_id, @building, @village)
-      Rails.logger.info "Building #{@building_id} already processed in cycle #{@loop_cycle_id}, skipping"
-      return success_result("Resources already produced in this cycle", {
-        building_id: @building_id,
-        skipped: true,
-        loop_cycle_id: @loop_cycle_id
-      })
-    end
+    # Individual resources are checked for idempotency during processing
+    # (no need for building-level check since different resources can be produced independently)
 
     result = process_building_outputs
     return failure_result(result.message, result.data) unless result.success
@@ -42,30 +36,32 @@ class ProduceResourcesFromBuildingService < ApplicationService
     total_quantity = 0
 
     @building.building_outputs.each do |output|
+      # Check if this specific resource was already produced by this building in this cycle
+      if @entity_tracker&.resource_produced?(output.resource.id, @building.id, @village.id)
+        Rails.logger.info "Resource #{output.resource.name} already produced by Building #{@building.id} in cycle #{@loop_cycle_id}, skipping"
+        next
+      end
+
       quantity_produced = output.quantity * @multiplier
 
-      # Use atomic production recording (prevents duplicates)
-      success = ResourceProduction.record_production!(
-        @village,
-        @building,
-        output.resource,
-        quantity_produced,
-        @multiplier,
-        @loop_cycle_id
+      # Update the actual village resource directly (no need for ResourceProduction tracking)
+      village_resource = VillageResource.find_or_create_by!(
+        village: @village,
+        resource: output.resource
       )
+      village_resource.increment!(:count, quantity_produced)
 
-      if success
-        # Get the updated count
-        village_resource = VillageResource.find_by(village: @village, resource: output.resource)
-        resources_produced << {
-          resource_name: output.resource.name,
-          quantity: quantity_produced,
-          new_total: village_resource&.count || quantity_produced
-        }
-        total_quantity += quantity_produced
-      else
-        Rails.logger.info "Skipped production for #{output.resource.name} - already produced recently"
-      end
+      # Mark as produced in entity tracker for idempotency
+      @entity_tracker&.mark_resource_produced!(output.resource.id, @building.id, @village.id)
+
+      resources_produced << {
+        resource_name: output.resource.name,
+        quantity: quantity_produced,
+        new_total: village_resource.count
+      }
+      total_quantity += quantity_produced
+
+      Rails.logger.info "Produced #{quantity_produced} #{output.resource.name} (new total: #{village_resource.count})"
     end
 
     ::OpenStruct.new(

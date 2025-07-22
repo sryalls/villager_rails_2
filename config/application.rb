@@ -26,7 +26,5 @@ module Villager
 
     # Game loop configuration
     config.game_loop_cleanup_keep_duration = 24.hours
-    config.resource_production_cleanup_keep_duration = 7.days
-    config.resource_production_window = 25.seconds # Legacy time-based window (deprecated)
   end
 end

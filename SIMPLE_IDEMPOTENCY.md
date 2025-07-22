@@ -67,7 +67,8 @@ VillageLoopService.new(village_id, main_loop_state: main, village_loop_state: vi
 ```
 
 ### 3. Resource Production Level
-- Same as before: Uses cycle-based `ResourceProduction.produced_in_cycle?()` for idempotency
+- Uses hierarchical entity tracker: `entity_tracker.resource_produced?(resource_id, building_id, village_id)` for idempotency
+- No database model needed - all tracking done in Redis
 
 ## Data Storage
 
@@ -126,16 +127,6 @@ game_loop:abc123:village:101:building:201:resource:301 # Resource 301 from Build
 - **Batch Operations**: Efficient multi-entity processing
 - **Auto-cleanup**: TTL handles expiration automatically
 
-### ResourceProduction
-```ruby
-# Records actual resource production events (unchanged)
-- village, building, resource: References
-- quantity_produced: Integer
-- building_multiplier: Integer
-- produced_at: DateTime
-- loop_cycle_id: String (for cycle-based idempotency)
-```
-
 ## Configuration
 
 ## Configuration
@@ -152,9 +143,8 @@ Redis configuration is handled through the existing Rails cache configuration an
 
 Legacy database configuration (no longer used):
 ```ruby
-# Game loop configuration - Redis replaces these
-# config.game_loop_cleanup_keep_duration = 24.hours # Not needed with Redis TTL
-config.resource_production_cleanup_keep_duration = 7.days # Still used for ResourceProduction
+# Game loop configuration - Redis TTL replaces these
+config.game_loop_cleanup_keep_duration = 24.hours # Only for backward compatibility
 ```
 
 ## Benefits
@@ -237,8 +227,5 @@ VillageLoopJob.perform_now(village_id, loop_cycle_id: loop_state_id)
 
 ## Cleanup
 
-The system includes configurable cleanup methods:
-- `ResourceProduction.cleanup_old_productions!()` - removes old production records
-- `GameLoopState.cleanup_old_loops!()` - removes old loop state records
-
-All cleanup durations are configurable and have sensible defaults.
+Redis TTL automatically handles state cleanup, no manual cleanup methods needed.
+Game state is ephemeral and doesn't require long-term persistence.
