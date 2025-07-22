@@ -71,44 +71,64 @@ VillageLoopService.new(village_id, main_loop_state: main, village_loop_state: vi
 
 ## Data Storage
 
-### GameLoopState (Redis-based PORO)
-The `GameLoopState` is now a Plain Old Ruby Object (PORO) that uses Redis for storage instead of database persistence. This provides:
+### Hierarchical Entity Tracking System
+The system now uses a hierarchical, Redis-based architecture that scales much better as the game expands:
 
-- **Performance**: Much faster read/write operations compared to database
-- **Automatic Cleanup**: Redis TTL automatically expires old states (default 2 hours)
-- **Scalability**: Reduced database load for high-frequency operations
-- **Appropriate Durability**: Transient game state doesn't need long-term persistence
+#### GameLoopState (Lifecycle Management)
+Focused solely on loop lifecycle management - no entity tracking data stored here:
 
 ```ruby
-# Redis-backed state management with automatic expiration
+# Redis-backed lifecycle management with automatic expiration
 - id: String (UUID)
 - loop_type: String ('play_loop', 'village_loop')
 - identifier: String (optional identifier for village-specific loops)
 - status: String ('running', 'completed', 'failed')
 - started_at, completed_at: DateTime
-- processed_villages: Array (JSON) - village IDs processed in this loop
-- processed_buildings: Hash (JSON) - village_id => [building_ids] processed
 - sidekiq_job_id: String (for debugging)
 - error_message: String (for failed states)
 ```
 
 **Key Methods:**
-- `mark_village_queued!(village)` - Record village as queued
-- `mark_building_processed!(village, building)` - Record building as processed
-- `village_queued?(village)` - Check if village was queued
-- `building_processed?(village, building)` - Check if building was processed
-- `queued_villages` - Get villages queued in this loop
-- `processed_buildings_for_village(village)` - Get buildings processed for village
-
-**Atomic Operations:**
 - `GameLoopState.can_start_loop?(type, identifier)` - Check if loop can start
 - `GameLoopState.start_loop!(type, identifier, job_id)` - Atomically create running state
 - Uses Redis `SET ... NX` for atomic lock acquisition
-- `processed_buildings_for_village(village)` - Get buildings processed for village
+- Delegates entity tracking to `GameLoopEntityTracker`
+
+#### GameLoopEntityTracker (Hierarchical Entity Management)
+Uses many small Redis keys for scalable entity tracking:
+
+**Redis Key Structure:**
+```
+game_loop:{loop_id}:{entity_type}:{entity_id}                    # Top-level entities
+game_loop:{loop_id}:{parent_type}:{parent_id}:{entity_type}:{entity_id}  # Nested entities
+```
+
+**Examples:**
+```
+game_loop:abc123:village:101                           # Village 101 queued
+game_loop:abc123:village:101:building:201              # Building 201 in Village 101 processed
+game_loop:abc123:village:101:building:201:resource:301 # Resource 301 from Building 201 produced
+```
+
+**Key Methods:**
+- `mark_entity_processed!(type, id, parent_type:, parent_id:)` - Generic entity tracking
+- `mark_village_queued!(village_id)` - Specialized village tracking
+- `mark_building_processed!(building_id, village_id)` - Hierarchical building tracking
+- `mark_resource_produced!(resource_id, building_id, village_id)` - Deep hierarchy support
+- `get_processed_entities(type, parent_type:, parent_id:)` - Retrieve entity lists
+- `mark_entity_batch_processed!(type, ids, parent_type:, parent_id:)` - Batch operations
+
+**Benefits:**
+- **Scalable**: Each entity gets its own Redis key, no large JSON objects
+- **Extensible**: Easy to add new entity types (quests, research, etc.)
+- **Hierarchical**: Supports parent-child relationships (village → building → resource)
+- **Performant**: Small keys = fast Redis operations
+- **Batch Operations**: Efficient multi-entity processing
+- **Auto-cleanup**: TTL handles expiration automatically
 
 ### ResourceProduction
 ```ruby
-# Records actual resource production events
+# Records actual resource production events (unchanged)
 - village, building, resource: References
 - quantity_produced: Integer
 - building_multiplier: Integer
@@ -144,20 +164,43 @@ config.resource_production_cleanup_keep_duration = 7.days # Still used for Resou
 3. **Atomic**: State creation happens atomically before job enqueueing, preventing orphaned jobs
 4. **Idempotent**: Each operation in a cycle happens exactly once, with retry safety
 5. **Testable**: Clean separation between orchestration (GameLoopManager), execution (Jobs), and logic (Services)
-6. **Performant**: Redis-backed state storage is much faster than database persistence
+6. **Performant**: Redis-backed storage with small keys is much faster than database persistence
 7. **Self-Cleaning**: Redis TTL automatically expires old states, no manual cleanup needed
-8. **Scalable**: Reduced database load by moving transient state to Redis
-9. **Fail-Safe**: If job enqueueing fails, the state is automatically marked as failed
-10. **Appropriate Durability**: Game loop state doesn't need long-term persistence
-7. **Testable**: Services can be tested independently without job infrastructure
-8. **Debuggable**: Clear progress tracking for each cycle with easy introspection
+8. **Scalable**: Hierarchical entity tracking scales to millions of entities without performance degradation
+9. **Extensible**: Easy to add new entity types (quests, research, armies, etc.) without code changes
+10. **Hierarchical**: Supports deep parent-child relationships (village → building → resource → upgrade)
+11. **Batch Efficient**: Optimized multi-entity operations using Redis pipelines
+12. **Memory Efficient**: Small individual keys instead of large JSON objects
+13. **Fail-Safe**: If job enqueueing fails, the state is automatically marked as failed
+14. **Appropriate Durability**: Game loop state doesn't need long-term persistence
 
-## Migration from Time-Based System
+## Future Extensibility Examples
 
-- Removed all hardcoded time durations (e.g., `25.seconds`, `30.minutes`)
-- Deprecated `ResourceProduction.recently_produced?()` method
-- Added cycle-based `ResourceProduction.produced_in_cycle?()` method
-- **Consolidated `GameLoopProgress` into `GameLoopState`** - single model for state and progress
+The hierarchical system makes it trivial to add new game features:
+
+```ruby
+# Quest system
+tracker.mark_entity_processed!("quest", quest_id, parent_type: "village", parent_id: village_id)
+
+# Research system  
+tracker.mark_entity_processed!("research", research_id)
+
+# Army/combat system
+tracker.mark_entity_processed!("battle", battle_id, parent_type: "village", parent_id: village_id)
+
+# Trade system
+tracker.mark_entity_processed!("trade", trade_id, parent_type: "village", parent_id: village_id)
+
+# Resource upgrades
+tracker.mark_entity_processed!("upgrade", upgrade_id, parent_type: "building", parent_id: "#{village_id}:#{building_id}")
+```
+
+## Migration from Monolithic System
+
+- **Removed JSON arrays/objects** from GameLoopState (processed_villages, processed_buildings)
+- **Introduced GameLoopEntityTracker** for hierarchical entity management
+- **Maintained backward compatibility** via delegation methods in GameLoopState
+- **Improved performance** by replacing large JSON operations with small Redis key operations
 - Made all remaining time-based config values configurable
 
 ## Testing
