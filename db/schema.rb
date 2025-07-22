@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_05_130429) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_22_123808) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,6 +38,25 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_05_130429) do
     t.datetime "updated_at", null: false
     t.index ["building_id"], name: "index_costs_on_building_id"
     t.index ["tag_id"], name: "index_costs_on_tag_id"
+  end
+
+  create_table "job_executions", force: :cascade do |t|
+    t.string "job_id", null: false
+    t.string "job_type", null: false
+    t.datetime "executed_at", null: false
+    t.text "resource_snapshot"
+    t.bigint "village_id"
+    t.bigint "building_id"
+    t.integer "multiplier", default: 1
+    t.string "status", default: "completed"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["building_id", "executed_at"], name: "index_job_executions_on_building_id_and_executed_at"
+    t.index ["building_id"], name: "index_job_executions_on_building_id"
+    t.index ["job_id", "job_type"], name: "index_job_executions_on_job_id_and_job_type", unique: true
+    t.index ["status"], name: "index_job_executions_on_status"
+    t.index ["village_id", "executed_at"], name: "index_job_executions_on_village_id_and_executed_at"
+    t.index ["village_id"], name: "index_job_executions_on_village_id"
   end
 
   create_table "resources", force: :cascade do |t|
@@ -112,6 +131,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_05_130429) do
   add_foreign_key "building_outputs", "resources"
   add_foreign_key "costs", "buildings"
   add_foreign_key "costs", "tags"
+  add_foreign_key "job_executions", "buildings"
+  add_foreign_key "job_executions", "villages"
   add_foreign_key "village_buildings", "buildings"
   add_foreign_key "village_buildings", "villages"
   add_foreign_key "village_resources", "resources"

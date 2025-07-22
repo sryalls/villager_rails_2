@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'ostruct'
 
 RSpec.describe ApplicationJob, type: :job do
   # Create a test job to verify the base functionality

@@ -37,6 +37,47 @@ RSpec.describe ProduceResourcesFromBuildingService, type: :service do
         expect(result.data[:total_quantity]).to eq(5) # 5 * 1
         expect(village_resource).to have_attributes(count: 5) # 0 + (5 * 1)
       end
+
+      it "records job execution in database" do
+        result = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1)
+
+        expect(result.success).to be true
+        execution = JobExecution.find_by(job_type: 'ProduceResourcesFromBuildingJob')
+        expect(execution).to be_present
+        expect(execution.status).to eq('completed')
+        expect(execution.building_id).to eq(woodcutter.id)
+        expect(execution.village_id).to eq(village.id)
+      end
+
+      it "is idempotent - does not process twice with same job_id" do
+        job_id = "test-produce-12345"
+        
+        # First call
+        expect {
+          @result1 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
+        }.to change { JobExecution.count }.by(1)
+        
+        expect(@result1.success).to be true
+        village_resource = VillageResource.find_by(village: village, resource: logs)
+        expect(village_resource.count).to eq(5)
+
+        # Verify job execution was recorded
+        execution = JobExecution.find_by(job_id: job_id, job_type: 'ProduceResourcesFromBuildingJob')
+        expect(execution).to be_present
+        expect(execution.status).to eq('completed')
+
+        # Second call with same job_id should be skipped
+        expect {
+          @result2 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
+        }.not_to change { JobExecution.count }
+        
+        expect(@result2.success).to be true
+        expect(@result2.message).to include("already executed")
+        expect(@result2.data[:skipped]).to be true
+        
+        # Resource count should not change
+        expect(village_resource.reload.count).to eq(5)
+      end
     end
 
     context "when building does not exist" do
