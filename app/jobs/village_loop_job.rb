@@ -1,14 +1,31 @@
 class VillageLoopJob < ApplicationJob
   queue_as :default
 
-  def perform(village_id, job_id = nil)
-    job_id ||= "village-#{village_id}-#{Time.current.to_i}"
+  def perform(village_id, loop_cycle_id: nil)
+    # Check if a village loop is already running for this village
+    unless GameLoopState.can_start_loop?('village_loop', village_id.to_s)
+      Rails.logger.info "Village loop already running for Village ID: #{village_id}, skipping"
+      return
+    end
 
-    Rails.logger.info "VillageJob started for Village ID: #{village_id} at #{Time.current} (Job ID: #{job_id})"
+    # Start tracking this loop
+    loop_state = GameLoopState.start_loop!('village_loop', village_id.to_s, job_id)
+    
+    Rails.logger.info "Village loop started for Village ID: #{village_id} at #{Time.current} (Loop ID: #{loop_state.id})"
 
-    result = VillageLoopService.call(village_id, job_id: job_id)
-    handle_service_result(result, context: "Village ID: #{village_id}, Job ID: #{job_id}")
-
-    Rails.logger.info "VillageJob completed for Village ID: #{village_id} at #{Time.current}"
+    begin
+      result = VillageLoopService.call(village_id, loop_cycle_id: loop_cycle_id, village_loop_state_id: loop_state.id)
+      handle_service_result(result, context: "Village ID: #{village_id}, Loop ID: #{loop_state.id}")
+      
+      # Mark loop as completed
+      loop_state.complete!
+      Rails.logger.info "Village loop completed for Village ID: #{village_id} at #{Time.current} (Loop ID: #{loop_state.id})"
+      
+    rescue StandardError => e
+      # Mark loop as failed
+      loop_state.fail!(e.message)
+      Rails.logger.error "Village loop failed for Village ID: #{village_id}: #{e.message} (Loop ID: #{loop_state.id})"
+      raise
+    end
   end
 end

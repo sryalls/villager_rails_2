@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_22_123808) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_22_124501) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_123808) do
     t.index ["tag_id"], name: "index_costs_on_tag_id"
   end
 
+  create_table "game_loop_states", force: :cascade do |t|
+    t.string "loop_type", null: false
+    t.string "identifier"
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.string "status", default: "running"
+    t.text "error_message"
+    t.string "sidekiq_job_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["loop_type", "identifier", "started_at"], name: "idx_on_loop_type_identifier_started_at_a7329b05d2"
+    t.index ["loop_type", "identifier", "status"], name: "index_game_loop_states_on_active_loops", unique: true, where: "((status)::text = 'running'::text)"
+    t.index ["status"], name: "index_game_loop_states_on_status"
+  end
+
   create_table "job_executions", force: :cascade do |t|
     t.string "job_id", null: false
     t.string "job_type", null: false
@@ -57,6 +72,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_123808) do
     t.index ["status"], name: "index_job_executions_on_status"
     t.index ["village_id", "executed_at"], name: "index_job_executions_on_village_id_and_executed_at"
     t.index ["village_id"], name: "index_job_executions_on_village_id"
+  end
+
+  create_table "resource_productions", force: :cascade do |t|
+    t.bigint "village_id", null: false
+    t.bigint "building_id", null: false
+    t.bigint "resource_id", null: false
+    t.integer "quantity_produced", null: false
+    t.integer "building_multiplier", default: 1
+    t.datetime "produced_at", null: false
+    t.string "loop_cycle_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["building_id"], name: "index_resource_productions_on_building_id"
+    t.index ["loop_cycle_id"], name: "index_resource_productions_on_loop_cycle_id"
+    t.index ["resource_id"], name: "index_resource_productions_on_resource_id"
+    t.index ["village_id", "building_id", "produced_at"], name: "idx_on_village_id_building_id_produced_at_890d6ef435"
+    t.index ["village_id", "building_id", "resource_id", "produced_at"], name: "index_resource_productions_on_unique_production"
+    t.index ["village_id"], name: "index_resource_productions_on_village_id"
   end
 
   create_table "resources", force: :cascade do |t|
@@ -133,6 +166,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_123808) do
   add_foreign_key "costs", "tags"
   add_foreign_key "job_executions", "buildings"
   add_foreign_key "job_executions", "villages"
+  add_foreign_key "resource_productions", "buildings"
+  add_foreign_key "resource_productions", "resources"
+  add_foreign_key "resource_productions", "villages"
   add_foreign_key "village_buildings", "buildings"
   add_foreign_key "village_buildings", "villages"
   add_foreign_key "village_resources", "resources"

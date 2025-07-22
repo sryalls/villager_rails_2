@@ -13,11 +13,11 @@ RSpec.describe PlayLoopJob, type: :job do
     create(:village_building, village: village, building: woodcutter)
     create(:village_building, village: village, building: farm)
 
-    allow(VillageLoopJob).to receive(:perform_later).and_wrap_original do |method, *args|
-      VillageLoopJob.perform_now(*args)
+    allow(VillageLoopJob).to receive(:perform_later).and_wrap_original do |method, *args, **kwargs|
+      VillageLoopJob.perform_now(*args, **kwargs)
     end
-    allow(ProduceResourcesFromBuildingJob).to receive(:perform_later).and_wrap_original do |method, *args|
-      ProduceResourcesFromBuildingJob.perform_now(*args)
+    allow(ProduceResourcesFromBuildingJob).to receive(:perform_later).and_wrap_original do |method, *args, **kwargs|
+      ProduceResourcesFromBuildingJob.perform_now(*args, **kwargs)
     end
   end
 

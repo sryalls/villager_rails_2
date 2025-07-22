@@ -55,12 +55,10 @@ class ProduceResourcesFromBuildingService < ApplicationService
       )
       
       if success
-        # Get the updated count
-        village_resource = VillageResource.find_by(village: @village, resource: output.resource)
         resources_produced << {
           resource_name: output.resource.name,
           quantity: quantity_produced,
-          new_total: village_resource&.count || quantity_produced
+          new_total: VillageResource.find_by(@village, output.resource)&.count || quantity_produced
         }
         total_quantity += quantity_produced
       else
@@ -81,4 +79,5 @@ class ProduceResourcesFromBuildingService < ApplicationService
   rescue StandardError => e
     failure_result("Failed to process building outputs: #{e.message}")
   end
+end
 end

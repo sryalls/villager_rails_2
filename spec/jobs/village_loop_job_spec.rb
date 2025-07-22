@@ -21,7 +21,7 @@ RSpec.describe VillageLoopJob, type: :job do
       end
 
       it "calls VillageLoopService with the correct village ID" do
-        VillageLoopJob.perform_now(village.id, "test-job-id")
+        VillageLoopJob.perform_now(village.id, job_id: "test-job-id")
 
         expect(VillageLoopService).to have_received(:call).with(village.id, job_id: "test-job-id")
       end

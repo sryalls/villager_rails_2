@@ -1,13 +1,31 @@
 class PlayLoopJob < ApplicationJob
   queue_as :default
 
-  def perform(*args)
-    # Extract job_id if provided, otherwise generate one
-    job_id = args.last.is_a?(String) && args.last.start_with?("play-loop-") ? args.pop : "play-loop-#{Time.current.to_i}"
+  def perform(job_id: nil)
+    # Check if a play loop is already running
+    unless GameLoopState.can_start_loop?('play_loop')
+      Rails.logger.info "Play loop already running, skipping this execution"
+      return
+    end
 
-    Rails.logger.info "Play loop executed at #{Time.current} (Job ID: #{job_id})"
+    # Start tracking this loop
+    loop_state = GameLoopState.start_loop!('play_loop', nil, job_id)
+    
+    Rails.logger.info "Play loop started at #{Time.current} (Loop ID: #{loop_state.id})"
 
-    result = PlayLoopService.call(*args, job_id: job_id)
-    handle_service_result(result, context: "Play loop, Job ID: #{job_id}")
+    begin
+      result = PlayLoopService.call(loop_cycle_id: loop_state.id)
+      handle_service_result(result, context: "Play loop, Loop ID: #{loop_state.id}")
+      
+      # Mark loop as completed
+      loop_state.complete!
+      Rails.logger.info "Play loop completed at #{Time.current} (Loop ID: #{loop_state.id})"
+      
+    rescue StandardError => e
+      # Mark loop as failed
+      loop_state.fail!(e.message)
+      Rails.logger.error "Play loop failed: #{e.message} (Loop ID: #{loop_state.id})"
+      raise
+    end
   end
 end
