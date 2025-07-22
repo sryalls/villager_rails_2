@@ -13,16 +13,30 @@ This document describes the simplified, cycle-based idempotency system for game 
 
 ## How It Works
 
+### Architecture Overview
+The system follows a clean separation of concerns:
+- **Jobs**: Handle job orchestration and delegation only
+- **Services**: Handle all business logic and loop state management
+- **Models**: Handle data persistence and state tracking
+
 ### 1. Game Loop Level (`PlayLoopJob` → `PlayLoopService`)
-- Each game loop cycle gets a unique `GameLoopState` instance
-- `PlayLoopService` tracks which villages have been queued for processing in this loop
-- On retry, only villages that haven't been queued yet are processed
-- Uses `loop_state.mark_village_queued!(village)` to record progress
+- **Job**: Simply delegates to `PlayLoopService.call(job_id: job_id)`
+- **Service**: Manages the entire play loop lifecycle:
+  - Checks if loop can start
+  - Creates and manages `GameLoopState`
+  - Tracks which villages have been queued for processing
+  - Handles completion and failure scenarios
+  - On retry, only villages that haven't been queued yet are processed
 
 ### 2. Village Level (`VillageLoopJob` → `VillageLoopService`)
-- Tracks which buildings have been processed for each village in the current loop
-- On retry, only buildings that haven't been processed yet are queued
-- Uses `loop_state.mark_building_processed!(village, building)` to record progress
+- **Job**: Simply delegates to `VillageLoopService.call(village_id, loop_cycle_id: cycle_id, job_id: job_id)`
+- **Service**: Manages the village loop lifecycle:
+  - Checks if village loop can start
+  - Creates village-specific `GameLoopState`
+  - Gets main play loop state for progress tracking
+  - Tracks which buildings have been processed for the village
+  - Handles completion and failure scenarios
+  - On retry, only buildings that haven't been processed yet are queued
 
 ### 3. Resource Production Level (`ProduceResourcesFromBuildingJob` → `ProduceResourcesFromBuildingService`)
 - Checks if resources have already been produced for a building in the current cycle
@@ -78,7 +92,9 @@ config.resource_production_window = 25.seconds # Legacy (deprecated)
 3. **Idempotent**: Each operation in a cycle happens exactly once
 4. **Configurable**: No hardcoded durations, everything is configurable
 5. **Consolidated**: Single model manages both loop state and progress tracking
-6. **Debuggable**: Clear progress tracking for each cycle with easy introspection
+6. **Clean Architecture**: Jobs focus on orchestration, services handle all business logic
+7. **Testable**: Services can be tested independently without job infrastructure
+8. **Debuggable**: Clear progress tracking for each cycle with easy introspection
 
 ## Migration from Time-Based System
 
@@ -90,24 +106,34 @@ config.resource_production_window = 25.seconds # Legacy (deprecated)
 
 ## Testing
 
-The system can be tested end-to-end:
+The system can be tested at the service level without job infrastructure:
 
 ```ruby
-# Create a loop state
-loop_state = GameLoopState.start_loop!("play_loop", nil, "test-job")
+# Test complete cycle at service level
+result = PlayLoopService.call(job_id: "test-job")
+village_id = Village.first.id
+result2 = VillageLoopService.call(village_id, loop_cycle_id: result.data[:loop_state_id], job_id: "test-village")
 
-# Test complete cycle
-PlayLoopService.call(loop_state: loop_state)
-VillageLoopService.call(village_id, loop_state: loop_state)
-ProduceResourcesFromBuildingService.call(building_id, village, 1, loop_cycle_id: loop_state.id)
+# Test resource production
+building_id = Building.first.id
+village = Village.first
+result3 = ProduceResourcesFromBuildingService.call(building_id, village, 1, loop_cycle_id: result.data[:loop_state_id])
 
 # Test idempotency - second call should skip
-result = ProduceResourcesFromBuildingService.call(building_id, village, 1, loop_cycle_id: loop_state.id)
-# result.data[:skipped] should be true
+result4 = ProduceResourcesFromBuildingService.call(building_id, village, 1, loop_cycle_id: result.data[:loop_state_id])
+# result4.data[:skipped] should be true
 
-# Check progress
+# Check progress directly on the loop state
+loop_state = GameLoopState.find(result.data[:loop_state_id])
 loop_state.village_queued?(village)     # => true
-loop_state.building_processed?(village, building)  # => true
+loop_state.building_processed?(village, Building.first)  # => true
+```
+
+Jobs are simple and just delegate:
+```ruby
+# Job execution is just delegation
+PlayLoopJob.perform_now("test-job-id")
+VillageLoopJob.perform_now(village_id, loop_cycle_id: loop_state_id)
 ```
 
 ## Cleanup
