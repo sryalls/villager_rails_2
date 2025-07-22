@@ -13,10 +13,10 @@ class ProduceResourcesFromBuildingService < ApplicationService
     @building = Building.find_by(id: @building_id)
     return failure_result("Building not found") unless @building
 
-    # Check if already produced recently (data-state-based idempotency)
-    if ResourceProduction.recently_produced?(@village, @building)
-      Rails.logger.info "Building #{@building_id} already produced recently, skipping"
-      return success_result("Resources already produced recently", {
+    # Check if already processed in this specific cycle (simple cycle-based idempotency)
+    if ResourceProduction.produced_in_cycle?(@loop_cycle_id, @building, @village)
+      Rails.logger.info "Building #{@building_id} already processed in cycle #{@loop_cycle_id}, skipping"
+      return success_result("Resources already produced in this cycle", {
         building_id: @building_id,
         skipped: true,
         loop_cycle_id: @loop_cycle_id

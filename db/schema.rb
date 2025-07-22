@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_22_124501) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_22_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,6 +38,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_124501) do
     t.datetime "updated_at", null: false
     t.index ["building_id"], name: "index_costs_on_building_id"
     t.index ["tag_id"], name: "index_costs_on_tag_id"
+  end
+
+  create_table "game_loop_progresses", force: :cascade do |t|
+    t.string "loop_cycle_id", null: false
+    t.string "progress_type", null: false
+    t.bigint "village_id"
+    t.bigint "building_id"
+    t.datetime "completed_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["building_id"], name: "index_game_loop_progresses_on_building_id"
+    t.index ["loop_cycle_id", "progress_type", "village_id", "building_id"], name: "index_game_loop_progresses_on_unique_progress", unique: true
+    t.index ["loop_cycle_id"], name: "index_game_loop_progresses_on_loop_cycle_id"
+    t.index ["village_id"], name: "index_game_loop_progresses_on_village_id"
   end
 
   create_table "game_loop_states", force: :cascade do |t|
@@ -141,6 +155,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_124501) do
     t.index ["village_id"], name: "index_village_buildings_on_village_id"
   end
 
+  create_table "village_loop_failures", force: :cascade do |t|
+    t.bigint "village_id", null: false
+    t.string "loop_cycle_id"
+    t.text "error_message"
+    t.datetime "failed_at", null: false
+    t.boolean "recovered", default: false
+    t.datetime "recovered_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["loop_cycle_id"], name: "index_village_loop_failures_on_loop_cycle_id"
+    t.index ["recovered", "failed_at"], name: "index_village_loop_failures_on_recovered_and_failed_at"
+    t.index ["village_id", "failed_at"], name: "index_village_loop_failures_on_village_id_and_failed_at"
+    t.index ["village_id"], name: "index_village_loop_failures_on_village_id"
+  end
+
   create_table "village_resources", force: :cascade do |t|
     t.bigint "village_id", null: false
     t.bigint "resource_id", null: false
@@ -164,6 +193,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_124501) do
   add_foreign_key "building_outputs", "resources"
   add_foreign_key "costs", "buildings"
   add_foreign_key "costs", "tags"
+  add_foreign_key "game_loop_progresses", "buildings"
+  add_foreign_key "game_loop_progresses", "villages"
   add_foreign_key "job_executions", "buildings"
   add_foreign_key "job_executions", "villages"
   add_foreign_key "resource_productions", "buildings"
@@ -171,6 +202,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_124501) do
   add_foreign_key "resource_productions", "villages"
   add_foreign_key "village_buildings", "buildings"
   add_foreign_key "village_buildings", "villages"
+  add_foreign_key "village_loop_failures", "villages"
   add_foreign_key "village_resources", "resources"
   add_foreign_key "village_resources", "villages"
   add_foreign_key "villages", "tiles"
