@@ -14,34 +14,60 @@ This document describes the simplified, cycle-based idempotency system for game 
 ## How It Works
 
 ### Architecture Overview
-The system follows a clean separation of concerns:
-- **Jobs**: Handle job orchestration and delegation only
-- **Services**: Handle all business logic and loop state management
+The system follows a clean separation of concerns with **external state management** for maximum robustness:
+- **GameLoopManager**: Handles atomic state creation and job queuing - prevents race conditions
+- **Jobs**: Accept pre-created state IDs, validate state, and delegate to services
+- **Services**: Handle pure business logic with injected state dependencies
 - **Models**: Handle data persistence and state tracking
 
-### 1. Game Loop Level (`PlayLoopJob` → `PlayLoopService`)
-- **Job**: Simply delegates to `PlayLoopService.call(job_id: job_id)`
-- **Service**: Manages the entire play loop lifecycle:
-  - Checks if loop can start
-  - Creates and manages `GameLoopState`
-  - Tracks which villages have been queued for processing
-  - Handles completion and failure scenarios
-  - On retry, only villages that haven't been queued yet are processed
+### 1. Game Loop Level
+**External State Management Flow:**
+```ruby
+# External orchestration - Creates state atomically before enqueueing
+GameLoopManager.queue_play_loop!(job_id: "scheduler-123")
+# └─ Checks if loop can start
+# └─ Creates GameLoopState atomically
+# └─ Enqueues PlayLoopJob with loop_state_id
+# └─ Returns success/failure
 
-### 2. Village Level (`VillageLoopJob` → `VillageLoopService`)
-- **Job**: Simply delegates to `VillageLoopService.call(village_id, loop_cycle_id: cycle_id, job_id: job_id)`
-- **Service**: Manages the village loop lifecycle:
-  - Checks if village loop can start
-  - Creates village-specific `GameLoopState`
-  - Gets main play loop state for progress tracking
-  - Tracks which buildings have been processed for the village
-  - Handles completion and failure scenarios
-  - On retry, only buildings that haven't been processed yet are queued
+# Job - Accepts pre-created state ID
+PlayLoopJob.perform_later(loop_state_id: state.id)
+# └─ Looks up existing GameLoopState by ID
+# └─ Validates state is still running
+# └─ Calls PlayLoopService.call(loop_state: state)
 
-### 3. Resource Production Level (`ProduceResourcesFromBuildingJob` → `ProduceResourcesFromBuildingService`)
-- Checks if resources have already been produced for a building in the current cycle
-- Uses `ResourceProduction.produced_in_cycle?(cycle_id, building, village)` for idempotency
-- Completely cycle-based - no time windows or hardcoded durations
+# Service - Pure business logic
+PlayLoopService.new(loop_state: state).call
+# └─ Processes villages using GameLoopManager for sub-jobs
+# └─ Tracks progress on the state
+# └─ Completes or fails the loop state
+```
+
+### 2. Village Level  
+**External State Management Flow:**
+```ruby
+# From PlayLoopService - Uses GameLoopManager for sub-jobs
+GameLoopManager.queue_village_loop!(village_id, loop_cycle_id: main_loop_id)
+# └─ Checks if village loop can start
+# └─ Creates village GameLoopState atomically
+# └─ Enqueues VillageLoopJob with village_loop_state_id
+# └─ Returns success/failure
+
+# Job - Accepts pre-created state ID
+VillageLoopJob.perform_later(village_id, loop_cycle_id: main_loop_id, village_loop_state_id: village_state.id)
+# └─ Looks up existing village GameLoopState by ID
+# └─ Validates state is still running
+# └─ Gets main loop state for progress tracking
+# └─ Calls VillageLoopService.call(village_id, main_loop_state: main, village_loop_state: village)
+
+# Service - Pure business logic
+VillageLoopService.new(village_id, main_loop_state: main, village_loop_state: village).call
+# └─ Processes buildings and tracks progress
+# └─ Completes or fails the village loop state
+```
+
+### 3. Resource Production Level
+- Same as before: Uses cycle-based `ResourceProduction.produced_in_cycle?()` for idempotency
 
 ## Models
 
@@ -88,10 +114,13 @@ config.resource_production_window = 25.seconds # Legacy (deprecated)
 ## Benefits
 
 1. **Simple**: No complex time window calculations or separate progress tracking model
-2. **Robust**: Handles retries and failures gracefully using cycle-based tracking
-3. **Idempotent**: Each operation in a cycle happens exactly once
-4. **Configurable**: No hardcoded durations, everything is configurable
-5. **Consolidated**: Single model manages both loop state and progress tracking
+2. **Robust**: External state management prevents race conditions and handles job failures gracefully
+3. **Atomic**: State creation happens atomically before job enqueueing, preventing orphaned jobs
+4. **Idempotent**: Each operation in a cycle happens exactly once, with retry safety
+5. **Testable**: Clean separation between orchestration (GameLoopManager), execution (Jobs), and logic (Services)  
+6. **Configurable**: No hardcoded durations, everything is configurable
+7. **Consolidated**: Single model manages both loop state and progress tracking
+8. **Fail-Safe**: If job enqueueing fails, the state is automatically marked as failed
 6. **Clean Architecture**: Jobs focus on orchestration, services handle all business logic
 7. **Testable**: Services can be tested independently without job infrastructure
 8. **Debuggable**: Clear progress tracking for each cycle with easy introspection
