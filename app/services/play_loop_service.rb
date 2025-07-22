@@ -13,7 +13,7 @@ class PlayLoopService < ApplicationService
 
     # Start tracking this loop
     @loop_state = GameLoopState.start_loop!("play_loop", nil, @job_id)
-    
+
     Rails.logger.info "Play loop service started at #{Time.current} (Loop ID: #{@loop_state.id})"
 
     begin
@@ -25,7 +25,7 @@ class PlayLoopService < ApplicationService
       # Mark loop as completed
       @loop_state.complete!
       Rails.logger.info "Play loop service completed at #{Time.current} (Loop ID: #{@loop_state.id})"
-      
+
       success_result("Successfully queued processing for #{villages_processed} villages", {
         villages_processed: villages_processed,
         processed_at: Time.current,

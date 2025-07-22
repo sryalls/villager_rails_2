@@ -16,7 +16,7 @@ class VillageLoopService < ApplicationService
 
     # Start tracking this village loop
     @village_loop_state = GameLoopState.start_loop!("village_loop", @village_id.to_s, @job_id)
-    
+
     # Get the main play loop state for progress tracking
     @main_loop_state = GameLoopState.find_by(id: @loop_cycle_id) if @loop_cycle_id
 
