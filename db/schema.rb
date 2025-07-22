@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_22_130000) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_22_152138) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,20 +40,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_130000) do
     t.index ["tag_id"], name: "index_costs_on_tag_id"
   end
 
-  create_table "game_loop_progresses", force: :cascade do |t|
-    t.string "loop_cycle_id", null: false
-    t.string "progress_type", null: false
-    t.bigint "village_id"
-    t.bigint "building_id"
-    t.datetime "completed_at", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["building_id"], name: "index_game_loop_progresses_on_building_id"
-    t.index ["loop_cycle_id", "progress_type", "village_id", "building_id"], name: "index_game_loop_progresses_on_unique_progress", unique: true
-    t.index ["loop_cycle_id"], name: "index_game_loop_progresses_on_loop_cycle_id"
-    t.index ["village_id"], name: "index_game_loop_progresses_on_village_id"
-  end
-
   create_table "game_loop_states", force: :cascade do |t|
     t.string "loop_type", null: false
     t.string "identifier"
@@ -64,6 +50,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_130000) do
     t.string "sidekiq_job_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "processed_villages", comment: "JSON array of village IDs processed in this loop"
+    t.text "processed_buildings", comment: "JSON hash of village_id => [building_ids] processed"
     t.index ["loop_type", "identifier", "started_at"], name: "idx_on_loop_type_identifier_started_at_a7329b05d2"
     t.index ["loop_type", "identifier", "status"], name: "index_game_loop_states_on_active_loops", unique: true, where: "((status)::text = 'running'::text)"
     t.index ["status"], name: "index_game_loop_states_on_status"
@@ -193,8 +181,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_130000) do
   add_foreign_key "building_outputs", "resources"
   add_foreign_key "costs", "buildings"
   add_foreign_key "costs", "tags"
-  add_foreign_key "game_loop_progresses", "buildings"
-  add_foreign_key "game_loop_progresses", "villages"
   add_foreign_key "job_executions", "buildings"
   add_foreign_key "job_executions", "villages"
   add_foreign_key "resource_productions", "buildings"

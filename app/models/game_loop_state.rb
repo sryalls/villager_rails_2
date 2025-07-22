@@ -16,6 +16,13 @@ class GameLoopState < ApplicationRecord
   scope :for_type, ->(type) { where(loop_type: type) }
   scope :recent, ->(time_window = 1.hour) { where(started_at: time_window.ago..Time.current) }
 
+  # Progress tracking - serialize as JSON
+  serialize :processed_villages, type: Array, coder: JSON
+  serialize :processed_buildings, type: Hash, coder: JSON
+
+  # Initialize progress tracking on creation
+  after_initialize :initialize_progress_tracking
+
   # Check if a loop can start (no other loop of same type running)
   def self.can_start_loop?(loop_type, identifier = nil)
     !running.for_type(loop_type).where(identifier: identifier).exists?
@@ -77,5 +84,65 @@ class GameLoopState < ApplicationRecord
 
   def failed?
     status == "failed"
+  end
+
+  # Progress tracking methods
+
+  # Record that a village has been queued for processing in this loop
+  def mark_village_queued!(village)
+    village_id = village.is_a?(Village) ? village.id : village.to_i
+    self.processed_villages ||= []
+    unless self.processed_villages.include?(village_id)
+      self.processed_villages << village_id
+      save!
+    end
+  end
+
+  # Record that a building has been processed for a village in this loop
+  def mark_building_processed!(village, building)
+    village_id = village.is_a?(Village) ? village.id : village.to_i
+    building_id = building.is_a?(Building) ? building.id : building.to_i
+    
+    self.processed_buildings ||= {}
+    self.processed_buildings[village_id.to_s] ||= []
+    
+    unless self.processed_buildings[village_id.to_s].include?(building_id)
+      self.processed_buildings[village_id.to_s] << building_id
+      save!
+    end
+  end
+
+  # Get villages that have already been queued in this loop
+  def queued_villages
+    return Village.none if processed_villages.blank?
+    Village.where(id: processed_villages)
+  end
+
+  # Get buildings that have been processed for a specific village in this loop
+  def processed_buildings_for_village(village)
+    village_id = village.is_a?(Village) ? village.id : village.to_i
+    building_ids = processed_buildings&.dig(village_id.to_s) || []
+    return Building.none if building_ids.empty?
+    Building.where(id: building_ids)
+  end
+
+  # Check if a village has been queued in this loop
+  def village_queued?(village)
+    village_id = village.is_a?(Village) ? village.id : village.to_i
+    processed_villages&.include?(village_id) || false
+  end
+
+  # Check if a building has been processed for a village in this loop
+  def building_processed?(village, building)
+    village_id = village.is_a?(Village) ? village.id : village.to_i
+    building_id = building.is_a?(Building) ? building.id : building.to_i
+    processed_buildings&.dig(village_id.to_s)&.include?(building_id) || false
+  end
+
+  private
+
+  def initialize_progress_tracking
+    self.processed_villages ||= []
+    self.processed_buildings ||= {}
   end
 end
