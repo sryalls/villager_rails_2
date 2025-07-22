@@ -7,7 +7,6 @@ RSpec.describe PlayLoopService, type: :service do
       VillageResource.destroy_all
       VillageBuilding.destroy_all
       Village.destroy_all
-      JobExecution.destroy_all
       # Mock VillageLoopJob
       allow(VillageLoopJob).to receive(:perform_later)
     end
