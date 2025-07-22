@@ -10,8 +10,8 @@ class DropVillageLoopFailuresTable < ActiveRecord::Migration[8.0]
       t.timestamps
 
       t.index :loop_cycle_id
-      t.index [:recovered, :failed_at]
-      t.index [:village_id, :failed_at]
+      t.index [ :recovered, :failed_at ]
+      t.index [ :village_id, :failed_at ]
       t.index :village_id
     end
   end
