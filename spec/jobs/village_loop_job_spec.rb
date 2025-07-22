@@ -5,21 +5,40 @@ RSpec.describe VillageLoopJob, type: :job do
     let(:village) { create(:village) }
     let(:woodcutter) { create(:building, name: "Woodcutter") }
     let(:farm) { create(:building, name: "Farm") }
-    let(:service_instance) { instance_double(VillageLoopService) }
 
     before do
       create(:village_building, village: village, building: woodcutter)
       create(:village_building, village: village, building: farm)
 
-      allow(VillageLoopService).to receive(:new).and_return(service_instance)
-      allow(service_instance).to receive(:call)
+      allow(VillageLoopService).to receive(:call)
     end
 
-    it "calls VillageLoopService with the correct village ID" do
-      VillageLoopJob.perform_now(village.id)
+    context "when service returns success" do
+      let(:success_result) { ::OpenStruct.new(success: true, message: "Success", data: {}) }
 
-      expect(VillageLoopService).to have_received(:new)
-      expect(service_instance).to have_received(:call).with(village.id)
+      before do
+        allow(VillageLoopService).to receive(:call).and_return(success_result)
+      end
+
+      it "calls VillageLoopService with the correct village ID" do
+        VillageLoopJob.perform_now(village.id)
+
+        expect(VillageLoopService).to have_received(:call).with(village.id)
+      end
+    end
+
+    context "when service returns failure" do
+      let(:failure_result) { ::OpenStruct.new(success: false, message: "Error occurred", data: {}) }
+
+      before do
+        allow(VillageLoopService).to receive(:call).and_return(failure_result)
+      end
+
+      it "raises an error" do
+        expect {
+          VillageLoopJob.perform_now(village.id)
+        }.to raise_error(StandardError, "Error occurred")
+      end
     end
   end
 end

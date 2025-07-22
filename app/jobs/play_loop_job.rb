@@ -3,6 +3,8 @@ class PlayLoopJob < ApplicationJob
 
   def perform(*args)
     Rails.logger.info "Play loop executed at #{Time.current}"
-    PlayLoopService.new.call(*args)
+
+    result = PlayLoopService.call(*args)
+    handle_service_result(result, context: "Play loop")
   end
 end
