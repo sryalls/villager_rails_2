@@ -7,6 +7,6 @@
 
 :scheduler:
   :schedule:
-    play_loop_job:
+    play_loop_scheduler:
       every: ["20s"]
-      class: "PlayLoopJob"
+      class: "PlayLoopSchedulerJob"
