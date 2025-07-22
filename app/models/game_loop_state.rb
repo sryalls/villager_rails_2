@@ -55,7 +55,8 @@ class GameLoopState < ApplicationRecord
   end
 
   # Cleanup old completed/failed loops (keep recent ones for debugging)
-  def self.cleanup_old_loops!(keep_duration = 24.hours)
+  def self.cleanup_old_loops!(keep_duration = nil)
+    keep_duration ||= Rails.application.config.game_loop_cleanup_keep_duration || 24.hours
     where(status: [ "completed", "failed" ])
       .where("completed_at < ?", keep_duration.ago)
       .delete_all

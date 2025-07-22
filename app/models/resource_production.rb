@@ -12,24 +12,37 @@ class ResourceProduction < ApplicationRecord
   scope :for_building, ->(building_id) { where(building_id: building_id) }
   scope :for_cycle, ->(cycle_id) { where(loop_cycle_id: cycle_id) }
 
-  # Check if building already produced resources recently (within time window)
-  def self.recently_produced?(village, building, time_window = 25.seconds)
+  # Check if building already produced resources in a specific cycle (preferred method)
+  def self.produced_in_cycle?(cycle_id, building, village)
+    return false unless cycle_id
+    
+    where(village: village, building: building, loop_cycle_id: cycle_id)
+      .exists?
+  end
+
+  # Legacy time-based check (deprecated - use cycle-based instead)
+  def self.recently_produced?(village, building, time_window = nil)
+    Rails.logger.warn "WARNING: recently_produced? is deprecated. Use produced_in_cycle? instead."
+    time_window ||= Rails.application.config.resource_production_window || 25.seconds
+    
     where(village: village, building: building)
       .where(produced_at: time_window.ago..Time.current)
       .exists?
   end
 
-  # Record production (idempotent within time window)
+  # Record production (idempotent within cycle)
   def self.record_production!(village, building, resource, quantity, multiplier = 1, cycle_id = nil)
-    # Check if already produced recently
-    if recently_produced?(village, building)
-      Rails.logger.info "Skipping production for Building #{building.id} - already produced recently"
+    # Check if already produced in this cycle
+    if cycle_id && produced_in_cycle?(cycle_id, building, village)
+      Rails.logger.info "Skipping production for Building #{building.id} - already produced in cycle #{cycle_id}"
       return false
     end
 
     transaction do
-      # Double-check within transaction
-      return false if recently_produced?(village, building)
+      # Double-check within transaction for cycle-based idempotency
+      if cycle_id && produced_in_cycle?(cycle_id, building, village)
+        return false
+      end
 
       create!(
         village: village,
@@ -62,7 +75,8 @@ class ResourceProduction < ApplicationRecord
   end
 
   # Cleanup old production records (keep recent ones for audit)
-  def self.cleanup_old_productions!(keep_duration = 7.days)
+  def self.cleanup_old_productions!(keep_duration = nil)
+    keep_duration ||= Rails.application.config.resource_production_cleanup_keep_duration || 7.days
     where("produced_at < ?", keep_duration.ago).delete_all
   end
 end
