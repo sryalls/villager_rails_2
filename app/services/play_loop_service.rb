@@ -2,7 +2,7 @@ class PlayLoopService < ApplicationService
   def initialize(loop_state: nil, loop_cycle_id: nil)
     @loop_state = loop_state
     @loop_cycle_id = loop_cycle_id
-    
+
     # For backward compatibility, if only loop_cycle_id is provided, find the state
     if @loop_cycle_id && !@loop_state
       @loop_state = GameLoopState.find_by(id: @loop_cycle_id)
@@ -32,7 +32,7 @@ class PlayLoopService < ApplicationService
 
   def process_all_villages(villages)
     return 0 unless @loop_state
-    
+
     # Get villages that have already been queued in this loop (for retry scenarios)
     already_queued_villages = @loop_state.queued_villages
     remaining_villages = villages - already_queued_villages

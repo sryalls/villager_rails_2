@@ -102,10 +102,10 @@ class GameLoopState < ApplicationRecord
   def mark_building_processed!(village, building)
     village_id = village.is_a?(Village) ? village.id : village.to_i
     building_id = building.is_a?(Building) ? building.id : building.to_i
-    
+
     self.processed_buildings ||= {}
     self.processed_buildings[village_id.to_s] ||= []
-    
+
     unless self.processed_buildings[village_id.to_s].include?(building_id)
       self.processed_buildings[village_id.to_s] << building_id
       save!

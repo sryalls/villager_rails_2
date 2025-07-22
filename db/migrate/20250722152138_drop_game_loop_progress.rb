@@ -6,7 +6,7 @@ class DropGameLoopProgress < ActiveRecord::Migration[8.0]
       t.references :village, null: true, foreign_key: true
       t.references :building, null: true, foreign_key: true
       t.datetime :completed_at, null: false
-      
+
       t.timestamps
     end
   end

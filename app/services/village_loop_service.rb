@@ -4,7 +4,7 @@ class VillageLoopService < ApplicationService
     @loop_cycle_id = loop_cycle_id
     @village_loop_state_id = village_loop_state_id
     @loop_state = loop_state
-    
+
     # For backward compatibility, if only loop_cycle_id is provided, find the state
     if @loop_cycle_id && !@loop_state
       @loop_state = GameLoopState.find_by(id: @loop_cycle_id)
@@ -34,7 +34,7 @@ class VillageLoopService < ApplicationService
 
   def process_village_buildings(village)
     return 0 unless @loop_state
-    
+
     building_groups = village.village_buildings
                            .select(&:has_building_outputs?)
                            .group_by(&:building_id)

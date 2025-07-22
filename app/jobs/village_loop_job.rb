@@ -16,10 +16,10 @@ class VillageLoopJob < ApplicationJob
     begin
       # Get the main play loop state for progress tracking
       main_loop_state = GameLoopState.find_by(id: loop_cycle_id) if loop_cycle_id
-      
+
       result = VillageLoopService.call(
-        village_id, 
-        loop_cycle_id: loop_cycle_id, 
+        village_id,
+        loop_cycle_id: loop_cycle_id,
         village_loop_state_id: loop_state.id,
         loop_state: main_loop_state
       )
