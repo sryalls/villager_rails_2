@@ -15,6 +15,7 @@ This document describes the simplified, cycle-based idempotency system for game 
 
 ### Architecture Overview
 The system follows a clean separation of concerns with **external state management** for maximum robustness:
+- **PlayLoopSchedulerJob**: Sidekiq cron job that calls GameLoopManager every 20 seconds
 - **GameLoopManager**: Handles atomic state creation and job queuing - prevents race conditions
 - **Jobs**: Accept pre-created state IDs, validate state, and delegate to services
 - **Services**: Handle pure business logic with injected state dependencies
@@ -23,6 +24,10 @@ The system follows a clean separation of concerns with **external state manageme
 ### 1. Game Loop Level
 **External State Management Flow:**
 ```ruby
+# Sidekiq Scheduler (every 20s) - Uses proper orchestration
+PlayLoopSchedulerJob.perform_now
+# └─ Calls GameLoopManager.queue_play_loop!(job_id: "scheduler-123")
+
 # External orchestration - Creates state atomically before enqueueing
 GameLoopManager.queue_play_loop!(job_id: "scheduler-123")
 # └─ Checks if loop can start
