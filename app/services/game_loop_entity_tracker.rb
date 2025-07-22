@@ -120,7 +120,7 @@ class GameLoopEntityTracker
       parts = key.split(":")
       entity_index = parts.rindex(entity_type)
       next unless entity_index && entity_index < parts.length - 1
-      
+
       entity_id = parts[entity_index + 1]
       entity_id.to_i if entity_id.match?(/^\d+$/)
     end
