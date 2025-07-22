@@ -8,17 +8,17 @@ class CreateGameLoopStates < ActiveRecord::Migration[8.0]
       t.string :status, default: 'running' # 'running', 'completed', 'failed'
       t.text :error_message
       t.string :sidekiq_job_id
-      
+
       t.timestamps
     end
-    
+
     # Ensure only one active loop of each type at a time
-    add_index :game_loop_states, [:loop_type, :identifier, :status], 
-              unique: true, 
+    add_index :game_loop_states, [ :loop_type, :identifier, :status ],
+              unique: true,
               where: "status = 'running'",
               name: "index_game_loop_states_on_active_loops"
-              
-    add_index :game_loop_states, [:loop_type, :identifier, :started_at]
+
+    add_index :game_loop_states, [ :loop_type, :identifier, :started_at ]
     add_index :game_loop_states, :status
   end
 end

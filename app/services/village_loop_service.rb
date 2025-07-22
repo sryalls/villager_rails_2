@@ -36,9 +36,9 @@ class VillageLoopService < ApplicationService
       building = Building.find(building_id)
       unless ResourceProduction.recently_produced?(village, building)
         ProduceResourcesFromBuildingJob.perform_later(
-          building_id, 
-          village, 
-          village_buildings.count, 
+          building_id,
+          village,
+          village_buildings.count,
           loop_cycle_id: @loop_cycle_id
         )
       else

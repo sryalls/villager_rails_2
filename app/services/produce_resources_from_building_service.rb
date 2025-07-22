@@ -43,7 +43,7 @@ class ProduceResourcesFromBuildingService < ApplicationService
 
     @building.building_outputs.each do |output|
       quantity_produced = output.quantity * @multiplier
-      
+
       # Use atomic production recording (prevents duplicates)
       success = ResourceProduction.record_production!(
         @village,
@@ -53,7 +53,7 @@ class ProduceResourcesFromBuildingService < ApplicationService
         @multiplier,
         @loop_cycle_id
       )
-      
+
       if success
         # Get the updated count
         village_resource = VillageResource.find_by(village: @village, resource: output.resource)
