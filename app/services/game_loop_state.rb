@@ -3,7 +3,7 @@ class GameLoopState
   include ActiveModel::Attributes
   include ActiveModel::Validations
 
-  # Attributes
+  # Attributes - focused on lifecycle management only
   attribute :id, :string
   attribute :loop_type, :string
   attribute :identifier, :string
@@ -12,8 +12,6 @@ class GameLoopState
   attribute :completed_at, :datetime
   attribute :error_message, :string
   attribute :sidekiq_job_id, :string
-  attribute :processed_villages, :string # JSON array stored as string
-  attribute :processed_buildings, :string # JSON hash stored as string
 
   # Validations
   validates :loop_type, presence: true
@@ -41,9 +39,7 @@ class GameLoopState
         identifier: identifier,
         status: "running",
         started_at: Time.current.iso8601,
-        sidekiq_job_id: sidekiq_job_id,
-        processed_villages: "[]",
-        processed_buildings: "{}"
+        sidekiq_job_id: sidekiq_job_id
       }
 
       # Use Redis SET with NX (only set if not exists) for atomic operation
@@ -89,9 +85,7 @@ class GameLoopState
 
   def initialize(attributes = {})
     super
-    # Parse JSON strings if they exist
-    @processed_villages_array = processed_villages ? JSON.parse(processed_villages) : []
-    @processed_buildings_hash = processed_buildings ? JSON.parse(processed_buildings) : {}
+    @entity_tracker = GameLoopEntityTracker.new(id) if id
   end
 
   # Complete a loop
@@ -100,6 +94,8 @@ class GameLoopState
     self.completed_at = Time.current
     save!
     cleanup_running_cache!
+    # Optionally cleanup entity tracking
+    @entity_tracker&.cleanup_entities_for_loop!
   end
 
   # Fail a loop
@@ -109,6 +105,8 @@ class GameLoopState
     self.error_message = error_message
     save!
     cleanup_running_cache!
+    # Optionally cleanup entity tracking
+    @entity_tracker&.cleanup_entities_for_loop!
   end
 
   # Save state to Redis
@@ -123,9 +121,7 @@ class GameLoopState
       started_at: started_at&.iso8601,
       completed_at: completed_at&.iso8601,
       error_message: error_message,
-      sidekiq_job_id: sidekiq_job_id,
-      processed_villages: @processed_villages_array.to_json,
-      processed_buildings: @processed_buildings_hash.to_json
+      sidekiq_job_id: sidekiq_job_id
     }
 
     # Update by ID
@@ -157,55 +153,51 @@ class GameLoopState
     status == "failed"
   end
 
-  # Progress tracking methods
+  # Entity tracking delegation methods - for backward compatibility
+  # These delegate to the hierarchical entity tracker
 
-  # Record that a village has been queued for processing in this loop
   def mark_village_queued!(village)
     village_id = village.is_a?(Village) ? village.id : village.to_i
-    unless @processed_villages_array.include?(village_id)
-      @processed_villages_array << village_id
-      save!
-    end
+    @entity_tracker&.mark_village_queued!(village_id)
   end
 
-  # Record that a building has been processed for a village in this loop
   def mark_building_processed!(village, building)
     village_id = village.is_a?(Village) ? village.id : village.to_i
     building_id = building.is_a?(Building) ? building.id : building.to_i
-
-    @processed_buildings_hash[village_id.to_s] ||= []
-
-    unless @processed_buildings_hash[village_id.to_s].include?(building_id)
-      @processed_buildings_hash[village_id.to_s] << building_id
-      save!
-    end
+    @entity_tracker&.mark_building_processed!(building_id, village_id)
   end
 
-  # Get villages that have already been queued in this loop
   def queued_villages
-    return Village.none if @processed_villages_array.empty?
-    Village.where(id: @processed_villages_array)
+    return Village.none unless @entity_tracker
+    village_ids = @entity_tracker.get_queued_villages
+    return Village.none if village_ids.empty?
+    Village.where(id: village_ids)
   end
 
-  # Get buildings that have been processed for a specific village in this loop
   def processed_buildings_for_village(village)
+    return Building.none unless @entity_tracker
     village_id = village.is_a?(Village) ? village.id : village.to_i
-    building_ids = @processed_buildings_hash[village_id.to_s] || []
+    building_ids = @entity_tracker.get_processed_buildings_for_village(village_id)
     return Building.none if building_ids.empty?
     Building.where(id: building_ids)
   end
 
-  # Check if a village has been queued in this loop
   def village_queued?(village)
+    return false unless @entity_tracker
     village_id = village.is_a?(Village) ? village.id : village.to_i
-    @processed_villages_array.include?(village_id)
+    @entity_tracker.village_queued?(village_id)
   end
 
-  # Check if a building has been processed for a village in this loop
   def building_processed?(village, building)
+    return false unless @entity_tracker
     village_id = village.is_a?(Village) ? village.id : village.to_i
     building_id = building.is_a?(Building) ? building.id : building.to_i
-    @processed_buildings_hash.dig(village_id.to_s)&.include?(building_id) || false
+    @entity_tracker.building_processed?(building_id, village_id)
+  end
+
+  # Direct access to entity tracker for advanced usage
+  def entity_tracker
+    @entity_tracker
   end
 
   private
