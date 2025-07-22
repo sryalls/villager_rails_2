@@ -7,9 +7,9 @@ class PlayLoopService < ApplicationService
 
   def call
     # Check if this exact job has already been executed
-    if JobExecution.job_executed?(@job_id, 'PlayLoopJob')
+    if JobExecution.job_executed?(@job_id, "PlayLoopJob")
       Rails.logger.info "Job #{@job_id} already executed for play loop, skipping"
-      return success_result("Play loop job already executed", { 
+      return success_result("Play loop job already executed", {
         skipped: true,
         job_id: @job_id
       })
@@ -42,9 +42,9 @@ class PlayLoopService < ApplicationService
     jobs_queued = []
     villages.each do |village|
       village_job_id = "#{@job_id}-village-#{village.id}"
-      
+
       # Only queue if not already processed for idempotency
-      unless JobExecution.job_executed?(village_job_id, 'VillageLoopJob')
+      unless JobExecution.job_executed?(village_job_id, "VillageLoopJob")
         VillageLoopJob.perform_later(village.id, village_job_id)
         jobs_queued << { village_id: village.id, job_id: village_job_id }
       end
@@ -56,18 +56,18 @@ class PlayLoopService < ApplicationService
   def record_success(villages_processed)
     JobExecution.record_execution(
       @job_id,
-      'PlayLoopJob',
+      "PlayLoopJob",
       resource_data: { villages_processed: villages_processed },
-      status: 'completed'
+      status: "completed"
     )
   end
 
   def record_failure(message, data = {})
     JobExecution.record_execution(
       @job_id,
-      'PlayLoopJob',
+      "PlayLoopJob",
       resource_data: data,
-      status: 'failed'
+      status: "failed"
     )
     failure_result(message, data.merge(job_id: @job_id))
   end

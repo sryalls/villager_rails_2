@@ -3,7 +3,7 @@ class ProduceResourcesFromBuildingJob < ApplicationJob
 
   def perform(building_id, village, multiplier = 1, job_id = nil)
     job_id ||= "building-#{building_id}-#{village.id}-#{multiplier}-#{Time.current.to_i}"
-    
+
     Rails.logger.info "Producing resources for Building ID: #{building_id} at #{Time.current} (Job ID: #{job_id})"
 
     result = ProduceResourcesFromBuildingService.call(building_id, village, multiplier, job_id: job_id)

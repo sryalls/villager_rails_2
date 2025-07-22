@@ -51,12 +51,12 @@ RSpec.describe ProduceResourcesFromBuildingService, type: :service do
 
       it "is idempotent - does not process twice with same job_id" do
         job_id = "test-produce-12345"
-        
+
         # First call
         expect {
           @result1 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
         }.to change { JobExecution.count }.by(1)
-        
+
         expect(@result1.success).to be true
         village_resource = VillageResource.find_by(village: village, resource: logs)
         expect(village_resource.count).to eq(5)
@@ -70,11 +70,11 @@ RSpec.describe ProduceResourcesFromBuildingService, type: :service do
         expect {
           @result2 = ProduceResourcesFromBuildingService.call(woodcutter.id, village, 1, job_id: job_id)
         }.not_to change { JobExecution.count }
-        
+
         expect(@result2.success).to be true
         expect(@result2.message).to include("already executed")
         expect(@result2.data[:skipped]).to be true
-        
+
         # Resource count should not change
         expect(village_resource.reload.count).to eq(5)
       end

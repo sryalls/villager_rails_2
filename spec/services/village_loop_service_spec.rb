@@ -43,12 +43,12 @@ RSpec.describe VillageLoopService, type: :service do
 
       it "is idempotent - does not process twice with same job_id" do
         job_id = "test-village-loop-12345"
-        
+
         # First call
         expect {
           @result1 = VillageLoopService.call(village.id, job_id: job_id)
         }.to change { JobExecution.count }.by(1)
-        
+
         expect(@result1.success).to be true
         expect(ProduceResourcesFromBuildingJob).to have_received(:perform_later).twice
 
@@ -66,7 +66,7 @@ RSpec.describe VillageLoopService, type: :service do
         expect {
           @result2 = VillageLoopService.call(village.id, job_id: job_id)
         }.not_to change { JobExecution.count }
-        
+
         expect(@result2.success).to be true
         expect(@result2.message).to include("already executed")
         expect(@result2.data[:skipped]).to be true

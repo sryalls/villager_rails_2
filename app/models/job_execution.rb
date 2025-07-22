@@ -7,14 +7,14 @@ class JobExecution < ApplicationRecord
   validates :executed_at, presence: true
   validates :status, inclusion: { in: %w[completed failed] }
 
-  scope :completed, -> { where(status: 'completed') }
-  scope :failed, -> { where(status: 'failed') }
+  scope :completed, -> { where(status: "completed") }
+  scope :failed, -> { where(status: "failed") }
   scope :for_village, ->(village_id) { where(village_id: village_id) }
   scope :for_building, ->(building_id) { where(building_id: building_id) }
-  scope :recent, -> { where('executed_at >= ?', 1.hour.ago) }
+  scope :recent, -> { where("executed_at >= ?", 1.hour.ago) }
 
   def self.job_executed?(job_id, job_type)
-    exists?(job_id: job_id, job_type: job_type, status: 'completed')
+    exists?(job_id: job_id, job_type: job_type, status: "completed")
   end
 
   def self.record_execution(job_id, job_type, **options)

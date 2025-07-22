@@ -41,12 +41,12 @@ RSpec.describe PlayLoopService, type: :service do
 
       it "is idempotent - does not process twice with same job_id" do
         job_id = "test-play-loop-12345"
-        
+
         # First call
         expect {
           @result1 = PlayLoopService.call(job_id: job_id)
         }.to change { JobExecution.count }.by(1)
-        
+
         expect(@result1.success).to be true
         expect(VillageLoopJob).to have_received(:perform_later).twice
 
@@ -64,7 +64,7 @@ RSpec.describe PlayLoopService, type: :service do
         expect {
           @result2 = PlayLoopService.call(job_id: job_id)
         }.not_to change { JobExecution.count }
-        
+
         expect(@result2.success).to be true
         expect(@result2.message).to include("already executed")
         expect(@result2.data[:skipped]).to be true

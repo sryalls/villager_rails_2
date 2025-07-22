@@ -6,10 +6,10 @@ class VillageLoopService < ApplicationService
 
   def call
     # Check if this exact job has already been executed
-    if JobExecution.job_executed?(@job_id, 'VillageLoopJob')
+    if JobExecution.job_executed?(@job_id, "VillageLoopJob")
       Rails.logger.info "Job #{@job_id} already executed for Village ID: #{@village_id}, skipping"
-      return success_result("Job already executed for village", { 
-        village_id: @village_id, 
+      return success_result("Job already executed for village", {
+        village_id: @village_id,
         skipped: true,
         job_id: @job_id
       })
@@ -46,9 +46,9 @@ class VillageLoopService < ApplicationService
     jobs_queued = []
     building_groups.each do |building_id, village_buildings|
       building_job_id = "#{@job_id}-building-#{building_id}"
-      
+
       # Only queue if not already processed for idempotency
-      unless JobExecution.job_executed?(building_job_id, 'ProduceResourcesFromBuildingJob')
+      unless JobExecution.job_executed?(building_job_id, "ProduceResourcesFromBuildingJob")
         ProduceResourcesFromBuildingJob.perform_later(building_id, village, village_buildings.count, building_job_id)
         jobs_queued << {
           building_id: building_id,
@@ -64,10 +64,10 @@ class VillageLoopService < ApplicationService
   def record_success(village, buildings_processed)
     JobExecution.record_execution(
       @job_id,
-      'VillageLoopJob',
+      "VillageLoopJob",
       village: village,
       resource_data: { buildings_processed: buildings_processed },
-      status: 'completed'
+      status: "completed"
     )
   end
 
@@ -75,10 +75,10 @@ class VillageLoopService < ApplicationService
     village = Village.find_by(id: @village_id)
     JobExecution.record_execution(
       @job_id,
-      'VillageLoopJob',
+      "VillageLoopJob",
       village: village,
       resource_data: data,
-      status: 'failed'
+      status: "failed"
     )
     failure_result(message, data.merge(job_id: @job_id))
   end

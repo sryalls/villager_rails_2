@@ -13,9 +13,9 @@ class CreateJobExecutions < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :job_executions, [:job_id, :job_type], unique: true
-    add_index :job_executions, [:village_id, :executed_at]
-    add_index :job_executions, [:building_id, :executed_at]
+    add_index :job_executions, [ :job_id, :job_type ], unique: true
+    add_index :job_executions, [ :village_id, :executed_at ]
+    add_index :job_executions, [ :building_id, :executed_at ]
     add_index :job_executions, :status
   end
 end

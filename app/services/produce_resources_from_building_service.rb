@@ -9,10 +9,10 @@ class ProduceResourcesFromBuildingService < ApplicationService
 
   def call
     # Check if this exact job has already been executed
-    if JobExecution.job_executed?(@job_id, 'ProduceResourcesFromBuildingJob')
+    if JobExecution.job_executed?(@job_id, "ProduceResourcesFromBuildingJob")
       Rails.logger.info "Job #{@job_id} already executed for Building ID: #{@building_id}, skipping"
-      return success_result("Job already executed for building", { 
-        building_id: @building_id, 
+      return success_result("Job already executed for building", {
+        building_id: @building_id,
         skipped: true,
         job_id: @job_id
       })
@@ -75,24 +75,24 @@ class ProduceResourcesFromBuildingService < ApplicationService
   def record_success(data)
     JobExecution.record_execution(
       @job_id,
-      'ProduceResourcesFromBuildingJob',
+      "ProduceResourcesFromBuildingJob",
       village: @village,
       building: @building,
       multiplier: @multiplier,
       resource_data: data,
-      status: 'completed'
+      status: "completed"
     )
   end
 
   def record_failure(message, data = {})
     JobExecution.record_execution(
       @job_id,
-      'ProduceResourcesFromBuildingJob',
+      "ProduceResourcesFromBuildingJob",
       village: @village,
       building: @building,
       multiplier: @multiplier,
       resource_data: data,
-      status: 'failed'
+      status: "failed"
     )
     failure_result(message, data.merge(job_id: @job_id))
   end
