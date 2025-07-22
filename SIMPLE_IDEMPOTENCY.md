@@ -69,17 +69,27 @@ VillageLoopService.new(village_id, main_loop_state: main, village_loop_state: vi
 ### 3. Resource Production Level
 - Same as before: Uses cycle-based `ResourceProduction.produced_in_cycle?()` for idempotency
 
-## Models
+## Data Storage
 
-### GameLoopState (Consolidated)
+### GameLoopState (Redis-based PORO)
+The `GameLoopState` is now a Plain Old Ruby Object (PORO) that uses Redis for storage instead of database persistence. This provides:
+
+- **Performance**: Much faster read/write operations compared to database
+- **Automatic Cleanup**: Redis TTL automatically expires old states (default 2 hours)
+- **Scalability**: Reduced database load for high-frequency operations
+- **Appropriate Durability**: Transient game state doesn't need long-term persistence
+
 ```ruby
-# Manages both loop lifecycle and progress tracking
+# Redis-backed state management with automatic expiration
+- id: String (UUID)
 - loop_type: String ('play_loop', 'village_loop')
 - identifier: String (optional identifier for village-specific loops)
 - status: String ('running', 'completed', 'failed')
 - started_at, completed_at: DateTime
 - processed_villages: Array (JSON) - village IDs processed in this loop
 - processed_buildings: Hash (JSON) - village_id => [building_ids] processed
+- sidekiq_job_id: String (for debugging)
+- error_message: String (for failed states)
 ```
 
 **Key Methods:**
@@ -88,6 +98,12 @@ VillageLoopService.new(village_id, main_loop_state: main, village_loop_state: vi
 - `village_queued?(village)` - Check if village was queued
 - `building_processed?(village, building)` - Check if building was processed
 - `queued_villages` - Get villages queued in this loop
+- `processed_buildings_for_village(village)` - Get buildings processed for village
+
+**Atomic Operations:**
+- `GameLoopState.can_start_loop?(type, identifier)` - Check if loop can start
+- `GameLoopState.start_loop!(type, identifier, job_id)` - Atomically create running state
+- Uses Redis `SET ... NX` for atomic lock acquisition
 - `processed_buildings_for_village(village)` - Get buildings processed for village
 
 ### ResourceProduction
@@ -102,13 +118,23 @@ VillageLoopService.new(village_id, main_loop_state: main, village_loop_state: vi
 
 ## Configuration
 
-All time-based values are now configurable in `config/application.rb`:
+## Configuration
 
+Redis configuration is handled through the existing Rails cache configuration and Sidekiq Redis setup. The `GameLoopState` uses `Rails.cache` which should be backed by Redis in production.
+
+**Redis Keys Used:**
+- `game_loop_state:running:{loop_type}:{identifier}` - Running loop cache (atomic locks)
+- `game_loop_state:{id}` - Individual state storage by ID
+
+**TTL Settings:**
+- Default TTL: 2 hours (configurable via `GameLoopState::DEFAULT_TTL`)
+- Automatic cleanup: States expire automatically, no manual cleanup needed
+
+Legacy database configuration (no longer used):
 ```ruby
-# Game loop configuration
-config.game_loop_cleanup_keep_duration = 24.hours
-config.resource_production_cleanup_keep_duration = 7.days
-config.resource_production_window = 25.seconds # Legacy (deprecated)
+# Game loop configuration - Redis replaces these
+# config.game_loop_cleanup_keep_duration = 24.hours # Not needed with Redis TTL
+config.resource_production_cleanup_keep_duration = 7.days # Still used for ResourceProduction
 ```
 
 ## Benefits
@@ -117,11 +143,12 @@ config.resource_production_window = 25.seconds # Legacy (deprecated)
 2. **Robust**: External state management prevents race conditions and handles job failures gracefully
 3. **Atomic**: State creation happens atomically before job enqueueing, preventing orphaned jobs
 4. **Idempotent**: Each operation in a cycle happens exactly once, with retry safety
-5. **Testable**: Clean separation between orchestration (GameLoopManager), execution (Jobs), and logic (Services)  
-6. **Configurable**: No hardcoded durations, everything is configurable
-7. **Consolidated**: Single model manages both loop state and progress tracking
-8. **Fail-Safe**: If job enqueueing fails, the state is automatically marked as failed
-6. **Clean Architecture**: Jobs focus on orchestration, services handle all business logic
+5. **Testable**: Clean separation between orchestration (GameLoopManager), execution (Jobs), and logic (Services)
+6. **Performant**: Redis-backed state storage is much faster than database persistence
+7. **Self-Cleaning**: Redis TTL automatically expires old states, no manual cleanup needed
+8. **Scalable**: Reduced database load by moving transient state to Redis
+9. **Fail-Safe**: If job enqueueing fails, the state is automatically marked as failed
+10. **Appropriate Durability**: Game loop state doesn't need long-term persistence
 7. **Testable**: Services can be tested independently without job infrastructure
 8. **Debuggable**: Clear progress tracking for each cycle with easy introspection
 
